@@ -1,30 +1,35 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
+import logo from '../assets/logo.png'
 
 export default function NavBar() {
   const { user, logout } = useAuth()
 
   return (
     <nav className="bg-white shadow" role="navigation" aria-label="Main navigation">
-      <div className="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
-        <div>
-          <Link to="/" className="font-bold text-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">FYP</Link>
+      <div className="container-main flex items-center justify-between py-4">
+        <div className="flex items-center gap-3">
+          <Link to="/" className="flex items-center gap-3 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+            <img src={logo} alt="FYP logo" className="h-12 w-auto" />
+          
+          </Link>
         </div>
-        <div className="space-x-4">
+        <div className="flex items-center gap-4">
+          <Link to="/dashboard" className="text-sm muted">Dashboard</Link>
           {user ? (
             <>
-              <span className="text-sm">Hi, {user.first_name}</span>
-              <Link to="/profile" className="text-sm text-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Profile</Link>
+              <span className="text-sm muted">Hi, {user.first_name}</span>
+              <Link to="/profile" className="text-sm text-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-primary-300">Profile</Link>
               {user.role === 'ADMIN' && (
-                <Link to="/admin/users" className="text-sm text-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Users</Link>
+                <Link to="/admin/users" className="text-sm text-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-primary-300">Users</Link>
               )}
-              <button aria-label="Logout" onClick={logout} className="text-sm text-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">Logout</button>
+              <button aria-label="Logout" onClick={logout} className="btn-secondary">Logout</button>
             </>
           ) : (
             <>
-              <Link to="/login" className="text-sm text-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Login</Link>
-              <Link to="/register" className="text-sm text-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">Register</Link>
+              <Link to="/login" className="text-sm text-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-primary-300">Login</Link>
+              <Link to="/register" className="btn-primary">Register</Link>
             </>
           )}
         </div>

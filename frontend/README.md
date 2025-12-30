@@ -33,6 +33,8 @@ The dev server default port is 5173 which is already allowed in the backend CORS
 
 - Authorization checks: `useMe` now only runs if an access token exists, and it no longer retries or refetches on window focus by default — this prevents repeated 401 requests when the user is logged out.
 
+- Visual refresh: Applied a clean Indigo (primary) + Teal (accent) palette, consistent spacing, container and card components, standardized buttons (`.btn`, `.btn-primary`, `.btn-secondary`) and form input styles to improve alignment and padding.
+
 Manual test checklist
 
 1. Start Django backend (default: http://localhost:8000/) and run migrations.

@@ -81,8 +81,8 @@ export default function AdminUserDetail() {
         </label>
 
         <div className="flex gap-3 mt-3">
-          <button disabled={updateUser.isLoading} className="bg-blue-600 text-white p-2 rounded focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-indigo-500">{updateUser.isLoading ? 'Saving...' : 'Save'}</button>
-          <button type="button" onClick={handleDelete} className="bg-red-600 text-white p-2 rounded focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-red-500">Delete user</button>
+          <button disabled={updateUser.isLoading} className="btn-primary">{updateUser.isLoading ? 'Saving...' : 'Save'}</button>
+          <button type="button" onClick={handleDelete} className="btn-secondary">Delete user</button>
         </div>
       </form>
     </div>
