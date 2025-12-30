@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-gray-50 text-gray-800;
+}
+
+/* Skip-to-content link styles */
+.skip-link {
+  position: absolute;
+  left: -999px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+.skip-link:focus {
+  position: static;
+  width: auto;
+  height: auto;
+  left: auto;
+  padding: 0.5rem;
+  background: white;
+  z-index: 50;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.25rem;
+}
+
