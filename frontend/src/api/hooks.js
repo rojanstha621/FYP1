@@ -55,3 +55,82 @@ export function useProfileUpdate() {
 export function useChangePassword() {
   return useMutation((payload) => changePassword(payload).then((res) => res.data))
 }
+
+// --- Parent / babysitter related hooks ---
+import {
+  getParentProfile,
+  updateParentProfile,
+  patchParentProfile,
+  listChildren,
+  createChild,
+  listRequests,
+  createRequest,
+  cancelRequest,
+  babysitterSearch,
+  bookingHistory,
+} from './parent'
+
+export function useParentProfile() {
+  return useQuery(['parentProfile'], () => getParentProfile().then((res) => res.data), {
+    enabled: !!localStorage.getItem('access'),
+  })
+}
+
+export function useUpdateParentProfile() {
+  const qc = useQueryClient()
+  return useMutation((payload) => updateParentProfile(payload).then((res) => res.data), {
+    onSuccess: () => qc.invalidateQueries(['parentProfile', 'me']),
+  })
+}
+
+export function usePatchParentProfile() {
+  const qc = useQueryClient()
+  return useMutation((formData) => patchParentProfile(formData).then((res) => res.data), {
+    onSuccess: () => qc.invalidateQueries(['parentProfile', 'me']),
+  })
+}
+
+export function useChildren() {
+  return useQuery(['children'], () => listChildren().then((res) => res.data), {
+    enabled: !!localStorage.getItem('access'),
+  })
+}
+
+export function useCreateChild() {
+  const qc = useQueryClient()
+  return useMutation((payload) => createChild(payload).then((res) => res.data), {
+    onSuccess: () => qc.invalidateQueries(['children']),
+  })
+}
+
+export function useRequests() {
+  return useQuery(['requests'], () => listRequests().then((res) => res.data), {
+    enabled: !!localStorage.getItem('access'),
+  })
+}
+
+export function useCreateRequest() {
+  const qc = useQueryClient()
+  return useMutation((payload) => createRequest(payload).then((res) => res.data), {
+    onSuccess: () => qc.invalidateQueries(['requests', 'bookingHistory']),
+  })
+}
+
+export function useCancelRequest() {
+  const qc = useQueryClient()
+  return useMutation((id) => cancelRequest(id).then((res) => res.data), {
+    onSuccess: () => qc.invalidateQueries(['requests', 'bookingHistory']),
+  })
+}
+
+export function useBabysittersSearch(params) {
+  return useQuery(['babysitters', params], () => babysitterSearch(params).then((res) => res.data), {
+    enabled: !!localStorage.getItem('access'),
+  })
+}
+
+export function useBookingHistory() {
+  return useQuery(['bookingHistory'], () => bookingHistory().then((res) => res.data), {
+    enabled: !!localStorage.getItem('access'),
+  })
+}

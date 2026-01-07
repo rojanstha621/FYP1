@@ -6,8 +6,8 @@ import Alert from '../components/Alert'
 export default function AdminUsers() {
   const { data: users, isLoading, isError, refetch } = useAdminUsers()
 
-  if (isLoading) return <div className="p-base"><Alert>Loading users...</Alert></div>
-  if (isError) return <div className="p-4"><Alert type="error">Failed to load users. <button onClick={() => refetch()} className="ml-2 text-sm text-accent">Retry</button></Alert></div>
+  if (isLoading) return <div className="p-4"><Alert>Loading users...</Alert></div>
+  if (isError) return <div className="p-4"><Alert type="error">Failed to load users. <button onClick={() => refetch()} className="ml-2 text-sm text-blue-600">Retry</button></Alert></div>
 
   return (
     <div className="mt-6">
@@ -30,8 +30,8 @@ export default function AdminUsers() {
             </thead>
             <tbody>
               {users.map((u) => (
-                <tr key={u.id} className="border-b hover:bg-primary" tabIndex={0} role="row">
-                  <td className="py-2"><Link to={`/admin/users/${u.id}`} className="text-accent focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-accent">{u.email}</Link></td>
+                <tr key={u.id} className="border-b hover:bg-gray-50" tabIndex={0} role="row">
+                  <td className="py-2"><Link to={`/admin/users/${u.id}`} className="text-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-primary-300">{u.email}</Link></td>
                   <td className="py-2">{u.first_name} {u.last_name}</td>
                   <td className="py-2">{u.role}</td>
                   <td className="py-2">{u.is_active ? 'Yes' : 'No'}</td>

@@ -7,9 +7,6 @@ import Dashboard from './pages/Dashboard'
 import AdminUsers from './pages/AdminUsers'
 import AdminUserDetail from './pages/AdminUserDetail'
 import ProtectedRoute from './components/ProtectedRoute'
-import Babysitters from './pages/Babysitters'
-import Children from './pages/Children'
-import Requests from './pages/Requests'
 
 import Layout from './components/Layout'
 
@@ -46,33 +43,6 @@ export default function App() {
           element={
             <ProtectedRoute adminOnly>
               <AdminUserDetail />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/babysitters"
-          element={
-            <ProtectedRoute parentOnly>
-              <Babysitters />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/children"
-          element={
-            <ProtectedRoute parentOnly>
-              <Children />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/requests"
-          element={
-            <ProtectedRoute parentOnly>
-              <Requests />
             </ProtectedRoute>
           }
         />

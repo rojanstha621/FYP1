@@ -2,46 +2,71 @@ module.exports = {
   content: ['./index.html', './src/**/*.{js,jsx,ts,tsx}'],
   theme: {
     extend: {
+      /* Design system driven by CSS variables in index.css */
       colors: {
-        primary: {
-          50: '#eef2ff',
-          100: '#e0e7ff',
-          200: '#c7d2fe',
-          300: '#a5b4fc',
-          400: '#818cf8',
-          500: '#6366f1',
-          600: '#4f46e5',
-          700: '#4338ca',
-          800: '#3730a3',
-          900: '#312e81',
-        },
-        accent: {
-          50: '#f0fdfa',
-          100: '#ccfbf1',
-          200: '#99f6e4',
-          300: '#5eead4',
-          400: '#2dd4bf',
-          500: '#14b8a6',
-          600: '#0d9488',
-          700: '#0f766e',
-          800: '#115e59',
-          900: '#134e4a',
-        },
+        bg: 'var(--color-bg)',
+        surface: 'var(--color-surface)',
+        primary: 'var(--color-primary)',
+        accent: 'var(--color-accent)',
+        text: 'var(--color-text)',
+        muted: 'var(--color-muted)',
+        divider: 'var(--color-divider)',
+        success: 'var(--color-success)',
+        danger: 'var(--color-danger)',
+        warning: 'var(--color-warning)',
+
+        /* Backwards-compatible aliases */
+        bgPrimary: 'var(--bg-primary)',
+        bgSecondary: 'var(--bg-secondary)',
+        textPrimary: 'var(--text-primary)',
+        textSecondary: 'var(--text-secondary)',
+        btnPrimary: 'var(--btn-primary)',
+        btnPrimaryText: 'var(--btn-primary-text)',
+        btnSecondary: 'var(--btn-secondary)',
+        btnSecondaryText: 'var(--btn-secondary-text)',
+        dividerLegacy: 'var(--divider)',
       },
-      container: {
-        center: true,
-        padding: {
-          DEFAULT: '1rem',
-          sm: '2rem',
-          lg: '4rem',
-          xl: '6rem',
-        },
-      },
+
       spacing: {
-        '9': '2.25rem',
+        xs: 'var(--space-1)',
+        sm: 'var(--space-2)',
+        md: 'var(--space-4)',
+        lg: 'var(--space-8)',
+        xl: 'var(--space-12)',
+        section: 'var(--space-16)',
       },
+
+      borderRadius: {
+        main: 'var(--radius-base)',
+        lg: 'var(--radius-lg)',
+        sm: 'var(--radius-sm)',
+      },
+
       boxShadow: {
-        card: '0 6px 18px rgba(15, 23, 42, 0.08)',
+        card: 'var(--shadow-card)',
+        sm: 'var(--shadow-sm)',
+      },
+
+      fontFamily: {
+        body: ['var(--font-sans)'],
+        mono: ['var(--font-mono)'],
+      },
+
+      fontSize: {
+        base: ['var(--font-size-base)', { lineHeight: 'var(--line-height-base)' }],
+        h1: ['var(--heading-1)'],
+        h2: ['var(--heading-2)'],
+        h3: ['var(--heading-3)'],
+      },
+
+      transitionDuration: {
+        DEFAULT: 'var(--duration-default)',
+        fast: 'var(--duration-fast)',
+        slow: 'var(--duration-slow)',
+      },
+
+      transitionTimingFunction: {
+        DEFAULT: 'var(--ease-default)',
       },
     },
   },

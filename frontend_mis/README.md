@@ -33,7 +33,7 @@ The dev server default port is 5173 which is already allowed in the backend CORS
 
 - Authorization checks: `useMe` now only runs if an access token exists, and it no longer retries or refetches on window focus by default — this prevents repeated 401 requests when the user is logged out.
 
-- Visual refresh: Applied the new warm beige & mauve palette (primary backgrounds, mauve buttons, accent highlights), consistent spacing, container and card components, standardized buttons (`.btn`, `.btn-primary`, `.btn-secondary`) and form input styles to improve alignment and padding.
+- Visual refresh: Applied a clean Indigo (primary) + Teal (accent) palette, consistent spacing, container and card components, standardized buttons (`.btn`, `.btn-primary`, `.btn-secondary`) and form input styles to improve alignment and padding.
 
 Manual test checklist
 
@@ -49,21 +49,3 @@ Notes & troubleshooting
 - Token refresh: backend needs a refresh endpoint for automatic refresh on 401. Add SimpleJWT views to `urls.py` if desired (see snippet above).
 
 If you'd like, I can add basic scripts for running both servers together or prepare a small test script to exercise the main flows.
-
----
-
-## Parent app integration
-
-The frontend now includes a small set of helpers and pages to integrate with the backend `parent` app (endpoints under `/api/parent/`):
-
-- New API client: `src/api/parent.js` (functions: `getParentProfile`, `listChildren`, `createChild`, `listRequests`, `createRequest`, `cancelRequest`, `babysitterSearch`.)
-- New hooks in `src/api/hooks.js`: `useParentProfile`, `useChildren`, `useCreateChild`, `useRequests`, `useCreateRequest`, `useCancelRequest`, `useBabysittersSearch`, `useBookingHistory`.
-- Pages:
-  - `/babysitters` — babysitter search and request flow (simple in-page form)
-  - `/children` — list and create child profiles
-  - `/requests` — list bookings and cancel
-
-Notes:
-- All pages are protected by authentication. The backend further restricts parent-only actions server-side.
-- The NavBar shows the **Find Babysitters**, **Children**, and **Requests** links only when a user with role `PARENT` is logged in. Non-parents will not see these links and will be redirected to `/dashboard` if they try to access the routes directly.
-- If you want more polished UI (modals, confirmations, validation), I can extend these pages next.

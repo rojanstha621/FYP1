@@ -48,29 +48,29 @@ export default function AdminUserDetail() {
     }
   }
 
-  if (isLoading) return <div className="p-base">Loading user...</div>
-  if (isError) return <div className="p-base">Failed to load user</div>
+  if (isLoading) return <div className="p-4">Loading user...</div>
+  if (isError) return <div className="p-4">Failed to load user</div>
 
   return (
-    <div className="max-w-2xl mx-auto mt-8 card text-textPrimary">
+    <div className="max-w-2xl mx-auto mt-8 p-6 bg-white rounded shadow">
       <h1 className="text-2xl font-semibold">User detail</h1>
       {message && <Alert type={message.includes('failed') ? 'error' : 'success'}>{message}</Alert>}
 
       <form onSubmit={handleSubmit} className="mt-4 grid gap-3" aria-labelledby="admin-user-heading">
         <label htmlFor="admin-email" className="text-sm">Email</label>
-        <input id="admin-email" name="email" defaultValue={user.email} className="form-input" />
+        <input id="admin-email" name="email" defaultValue={user.email} className="border p-2 rounded focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-indigo-500" />
 
         <label htmlFor="admin-first" className="text-sm">First name</label>
-        <input id="admin-first" name="first_name" defaultValue={user.first_name} className="form-input" />
+        <input id="admin-first" name="first_name" defaultValue={user.first_name} className="border p-2 rounded focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-indigo-500" />
 
         <label htmlFor="admin-last" className="text-sm">Last name</label>
-        <input id="admin-last" name="last_name" defaultValue={user.last_name} className="form-input" />
+        <input id="admin-last" name="last_name" defaultValue={user.last_name} className="border p-2 rounded focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-indigo-500" />
 
         <label htmlFor="admin-phone" className="text-sm">Phone</label>
-        <input id="admin-phone" name="phone_number" defaultValue={user.phone_number} className="form-input" />
+        <input id="admin-phone" name="phone_number" defaultValue={user.phone_number} className="border p-2 rounded focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-indigo-500" />
 
         <label htmlFor="admin-role" className="text-sm">Role</label>
-        <select id="admin-role" name="role" defaultValue={user.role} className="form-input">
+        <select id="admin-role" name="role" defaultValue={user.role} className="border p-2 rounded focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-indigo-500">
           <option value="ADMIN">Admin</option>
           <option value="PARENT">Parent</option>
           <option value="BABYSITTER">Babysitter</option>

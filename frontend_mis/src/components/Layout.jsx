@@ -8,7 +8,7 @@ export default function Layout({ children }) {
       <a href="#content" className="skip-link">Skip to main content</a>
       <NavBar />
       <main id="content" tabIndex="-1" className="flex-grow">
-        <div className="container-main pt-section pb-section">
+        <div className="container-main pt-8 pb-12">
           {children}
         </div>
       </main>
