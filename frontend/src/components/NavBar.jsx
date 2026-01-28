@@ -29,9 +29,11 @@ export default function NavBar() {
               {/* Parent specific links */}
               {user.role === 'PARENT' && (
                 <>
-                  <Link to="/babysitters" className="text-sm text-accent hover:underline">Find Babysitters</Link>
+                  <Link to="/babysitters" className="text-sm text-accent hover:underline">Babysitters</Link>
                   <Link to="/children" className="text-sm text-accent hover:underline">Children</Link>
                   <Link to="/requests" className="text-sm text-accent hover:underline">Requests</Link>
+                  <Link to="/history" className="text-sm text-accent hover:underline">History</Link>
+                  <Link to="/reviews" className="text-sm text-accent hover:underline">Reviews</Link>
                 </>
               )}
 

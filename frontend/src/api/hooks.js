@@ -63,10 +63,25 @@ import {
   patchParentProfile,
   listChildren,
   createChild,
+  getChildDetail,
+  updateChild,
+  deleteChild,
   listRequests,
   createRequest,
+  getRequestDetail,
+  updateRequest,
+  deleteRequest,
   cancelRequest,
+  upcomingBookings,
+  pastBookings,
+  listBabysitters,
+  getBabysitterDetail,
   babysitterSearch,
+  listReviews,
+  createReview,
+  getReviewDetail,
+  updateReview,
+  deleteReview,
   bookingHistory,
 } from './parent'
 
@@ -96,9 +111,32 @@ export function useChildren() {
   })
 }
 
+export function useChildDetail(id) {
+  return useQuery(['child', id], () => getChildDetail(id).then((res) => res.data), {
+    enabled: !!id && !!localStorage.getItem('access'),
+  })
+}
+
 export function useCreateChild() {
   const qc = useQueryClient()
   return useMutation((payload) => createChild(payload).then((res) => res.data), {
+    onSuccess: () => qc.invalidateQueries(['children']),
+  })
+}
+
+export function useUpdateChild() {
+  const qc = useQueryClient()
+  return useMutation(({ id, payload }) => updateChild(id, payload).then((res) => res.data), {
+    onSuccess: () => {
+      qc.invalidateQueries(['children'])
+      qc.invalidateQueries(['child'])
+    },
+  })
+}
+
+export function useDeleteChild() {
+  const qc = useQueryClient()
+  return useMutation((id) => deleteChild(id).then((res) => res.data), {
     onSuccess: () => qc.invalidateQueries(['children']),
   })
 }
@@ -109,9 +147,33 @@ export function useRequests() {
   })
 }
 
+export function useRequestDetail(id) {
+  return useQuery(['request', id], () => getRequestDetail(id).then((res) => res.data), {
+    enabled: !!id && !!localStorage.getItem('access'),
+  })
+}
+
 export function useCreateRequest() {
   const qc = useQueryClient()
   return useMutation((payload) => createRequest(payload).then((res) => res.data), {
+    onSuccess: () => qc.invalidateQueries(['requests', 'bookingHistory']),
+  })
+}
+
+export function useUpdateRequest() {
+  const qc = useQueryClient()
+  return useMutation(({ id, payload }) => updateRequest(id, payload).then((res) => res.data), {
+    onSuccess: () => {
+      qc.invalidateQueries(['requests'])
+      qc.invalidateQueries(['request'])
+      qc.invalidateQueries(['bookingHistory'])
+    },
+  })
+}
+
+export function useDeleteRequest() {
+  const qc = useQueryClient()
+  return useMutation((id) => deleteRequest(id).then((res) => res.data), {
     onSuccess: () => qc.invalidateQueries(['requests', 'bookingHistory']),
   })
 }
@@ -123,9 +185,73 @@ export function useCancelRequest() {
   })
 }
 
+export function useUpcomingBookings() {
+  return useQuery(['upcomingBookings'], () => upcomingBookings().then((res) => res.data), {
+    enabled: !!localStorage.getItem('access'),
+  })
+}
+
+export function usePastBookings() {
+  return useQuery(['pastBookings'], () => pastBookings().then((res) => res.data), {
+    enabled: !!localStorage.getItem('access'),
+  })
+}
+
+export function useBabysitters() {
+  return useQuery(['babysitters'], () => listBabysitters().then((res) => res.data), {
+    enabled: !!localStorage.getItem('access'),
+  })
+}
+
+export function useBabysitterDetail(id) {
+  return useQuery(['babysitter', id], () => getBabysitterDetail(id).then((res) => res.data), {
+    enabled: !!id && !!localStorage.getItem('access'),
+  })
+}
+
 export function useBabysittersSearch(params) {
   return useQuery(['babysitters', params], () => babysitterSearch(params).then((res) => res.data), {
     enabled: !!localStorage.getItem('access'),
+  })
+}
+
+export function useReviews() {
+  return useQuery(['reviews'], () => listReviews().then((res) => res.data), {
+    enabled: !!localStorage.getItem('access'),
+  })
+}
+
+export function useReviewDetail(id) {
+  return useQuery(['review', id], () => getReviewDetail(id).then((res) => res.data), {
+    enabled: !!id && !!localStorage.getItem('access'),
+  })
+}
+
+export function useCreateReview() {
+  const qc = useQueryClient()
+  return useMutation((payload) => createReview(payload).then((res) => res.data), {
+    onSuccess: () => {
+      qc.invalidateQueries(['reviews'])
+      qc.invalidateQueries(['bookingHistory'])
+      qc.invalidateQueries(['requests'])
+    },
+  })
+}
+
+export function useUpdateReview() {
+  const qc = useQueryClient()
+  return useMutation(({ id, payload }) => updateReview(id, payload).then((res) => res.data), {
+    onSuccess: () => {
+      qc.invalidateQueries(['reviews'])
+      qc.invalidateQueries(['review'])
+    },
+  })
+}
+
+export function useDeleteReview() {
+  const qc = useQueryClient()
+  return useMutation((id) => deleteReview(id).then((res) => res.data), {
+    onSuccess: () => qc.invalidateQueries(['reviews']),
   })
 }
 

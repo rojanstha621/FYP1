@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useBabysittersSearch, useChildren, useCreateRequest } from '../api/hooks'
 import Alert from '../components/Alert'
 
@@ -65,6 +66,9 @@ export default function Babysitters() {
               <div className="text-xs text-textSecondary">Rating: {u.babysitter_profile?.average_rating ?? '—'}</div>
             </div>
             <div className="flex items-center gap-2">
+              <Link to={`/babysitters/${u.id}`} className="btn-secondary">
+                View Profile
+              </Link>
               <button className="btn-secondary" onClick={() => setSelected(u)}>Request</button>
             </div>
           </div>
