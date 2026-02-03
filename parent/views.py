@@ -13,9 +13,11 @@ from .serializers import (
     BabysitterRequestDetailSerializer,
     BabysitterReviewSerializer,
     BookingHistorySerializer,
+    BabysitterListSerializer,
+    BabysitterDetailSerializer,
 )
 from account.models import User
-from account.permissions import IsParent
+from account.permissions import IsParent, IsBabysitter
 
 
 class ParentProfileViewSet(viewsets.ModelViewSet):
@@ -90,14 +92,8 @@ class ChildProfileViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         """Create child profile for current user's parent profile"""
-        try:
-            parent_profile = self.request.user.parent_profile
-            serializer.save(parent=parent_profile)
-        except ParentProfile.DoesNotExist:
-            return Response(
-                {"detail": "Parent profile not found."},
-                status=status.HTTP_404_NOT_FOUND,
-            )
+        parent_profile, _ = ParentProfile.objects.get_or_create(user=self.request.user)
+        serializer.save(parent=parent_profile)
 
 
 class BabysitterRequestViewSet(viewsets.ModelViewSet):
@@ -133,14 +129,8 @@ class BabysitterRequestViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         """Create request for current user's parent profile"""
-        try:
-            parent_profile = self.request.user.parent_profile
-            serializer.save(parent=parent_profile)
-        except ParentProfile.DoesNotExist:
-            return Response(
-                {"detail": "Parent profile not found."},
-                status=status.HTTP_404_NOT_FOUND,
-            )
+        parent_profile, _ = ParentProfile.objects.get_or_create(user=self.request.user)
+        serializer.save(parent=parent_profile)
 
     @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated])
     def cancel(self, request, pk=None):
@@ -191,12 +181,17 @@ class BabysitterListingView(viewsets.ReadOnlyModelViewSet):
     """
 
     queryset = User.objects.filter(role="BABYSITTER", is_active=True)
-    serializer_class = ParentProfileSerializer  # We'll customize this
+    serializer_class = BabysitterListSerializer
     permission_classes = [IsAuthenticated, IsParent]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ["first_name", "last_name", "email"]
-    ordering_fields = ["first_name", "babysitter_profile__average_rating"]
-    ordering = ["-babysitter_profile__average_rating"]
+    ordering = ["first_name"]
+
+    def get_serializer_class(self):
+        """Use detailed serializer for retrieve action"""
+        if self.action == "retrieve":
+            return BabysitterDetailSerializer
+        return BabysitterListSerializer
 
     def get_serializer_context(self):
         """Add request context to serializer"""
@@ -212,27 +207,20 @@ class BabysitterListingView(viewsets.ReadOnlyModelViewSet):
         # Filter by name
         name = request.query_params.get("name")
         if name:
-            queryset = queryset.filter(first_name__icontains=name) | queryset.filter(
-                last_name__icontains=name
-            )
+            queryset = queryset.filter(
+                first_name__icontains=name
+            ) | queryset.filter(last_name__icontains=name)
 
-        # Filter by minimum rating
-        min_rating = request.query_params.get("min_rating")
-        if min_rating:
-            try:
-                min_rating = float(min_rating)
-                queryset = queryset.filter(
-                    babysitter_profile__average_rating__gte=min_rating
-                )
-            except (ValueError, TypeError):
-                pass
-
-        # Filter by city
+        # Filter by city - search in profile address
         city = request.query_params.get("city")
         if city:
-            queryset = queryset.filter(babysitter_profile__city__icontains=city)
+            queryset = queryset.filter(profile__address__icontains=city)
+
+        # Note: Rating filter removed since it requires annotation
+        # Can be implemented with queryset annotation if needed
 
         serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
         return Response(serializer.data)
 
 
@@ -293,3 +281,176 @@ class BookingHistoryViewSet(viewsets.ReadOnlyModelViewSet):
             except ParentProfile.DoesNotExist:
                 return BabysitterRequest.objects.none()
         return BabysitterRequest.objects.none()
+
+
+# ============================================
+# BABYSITTER VIEWSETS
+# ============================================
+
+
+class BabysitterIncomingRequestsViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for babysitters to view and manage incoming requests.
+    Babysitters can view requests sent to them and accept/reject them.
+    """
+
+    queryset = BabysitterRequest.objects.all()
+    serializer_class = BabysitterRequestSerializer
+    permission_classes = [IsAuthenticated, IsBabysitter]
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filterset_fields = ["status"]
+    ordering_fields = ["start_date", "created_at"]
+    ordering = ["-created_at"]
+    http_method_names = ["get", "patch", "post"]
+
+    def get_queryset(self):
+        """Filter requests sent to current babysitter"""
+        return BabysitterRequest.objects.filter(
+            babysitter=self.request.user
+        ).exclude(status__in=["COMPLETED", "CANCELLED"])
+
+    def get_serializer_class(self):
+        """Use detailed serializer for retrieve action"""
+        if self.action == "retrieve":
+            return BabysitterRequestDetailSerializer
+        return BabysitterRequestSerializer
+
+    @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated, IsBabysitter])
+    def accept(self, request, pk=None):
+        """Accept a babysitter request"""
+        booking_request = self.get_object()
+
+        if booking_request.status != "PENDING":
+            return Response(
+                {"detail": f"Cannot accept request with status {booking_request.status}."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        booking_request.status = "ACCEPTED"
+        booking_request.save()
+
+        return Response(
+            {"detail": "Request accepted successfully."},
+            status=status.HTTP_200_OK,
+        )
+
+    @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated, IsBabysitter])
+    def reject(self, request, pk=None):
+        """Reject a babysitter request"""
+        booking_request = self.get_object()
+
+        if booking_request.status != "PENDING":
+            return Response(
+                {"detail": f"Cannot reject request with status {booking_request.status}."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        booking_request.status = "REJECTED"
+        booking_request.save()
+
+        return Response(
+            {"detail": "Request rejected."},
+            status=status.HTTP_200_OK,
+        )
+
+
+class BabysitterBookingsViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for babysitters to view their accepted/ongoing bookings.
+    """
+
+    queryset = BabysitterRequest.objects.all()
+    serializer_class = BabysitterRequestSerializer
+    permission_classes = [IsAuthenticated, IsBabysitter]
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filterset_fields = ["status"]
+    ordering_fields = ["start_date", "created_at"]
+    ordering = ["start_date"]
+    http_method_names = ["get", "post"]
+
+    def get_queryset(self):
+        """Filter bookings for current babysitter"""
+        return BabysitterRequest.objects.filter(
+            babysitter=self.request.user,
+            status="ACCEPTED"
+        )
+
+    def get_serializer_class(self):
+        """Use detailed serializer for retrieve action"""
+        if self.action == "retrieve":
+            return BabysitterRequestDetailSerializer
+        return BabysitterRequestSerializer
+
+    @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated, IsBabysitter])
+    def complete(self, request, pk=None):
+        """Mark a booking as completed"""
+        booking = self.get_object()
+
+        if booking.status != "ACCEPTED":
+            return Response(
+                {"detail": f"Cannot complete booking with status {booking.status}."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        booking.status = "COMPLETED"
+        booking.save()
+
+        return Response(
+            {"detail": "Booking marked as completed."},
+            status=status.HTTP_200_OK,
+        )
+
+    @action(detail=False, methods=["get"], permission_classes=[IsAuthenticated, IsBabysitter])
+    def upcoming(self, request):
+        """Get upcoming accepted bookings"""
+        now = timezone.now()
+        bookings = self.get_queryset().filter(start_date__gt=now).order_by("start_date")
+        serializer = self.get_serializer(bookings, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=["get"], permission_classes=[IsAuthenticated, IsBabysitter])
+    def past(self, request):
+        """Get past bookings"""
+        now = timezone.now()
+        bookings = BabysitterRequest.objects.filter(
+            babysitter=request.user,
+            end_date__lt=now
+        ).order_by("-end_date")
+        serializer = BookingHistorySerializer(bookings, many=True)
+        return Response(serializer.data)
+
+
+class BabysitterReviewsReceivedViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    ViewSet for babysitters to view reviews they've received.
+    """
+
+    queryset = BabysitterReview.objects.all()
+    serializer_class = BabysitterReviewSerializer
+    permission_classes = [IsAuthenticated, IsBabysitter]
+    ordering = ["-created_at"]
+
+    def get_queryset(self):
+        """Filter reviews received by current babysitter"""
+        return BabysitterReview.objects.filter(babysitter=self.request.user)
+
+
+class BabysitterHistoryViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    ViewSet for viewing babysitter's completed booking history.
+    """
+
+    queryset = BabysitterRequest.objects.filter(status="COMPLETED")
+    serializer_class = BookingHistorySerializer
+    permission_classes = [IsAuthenticated, IsBabysitter]
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filterset_fields = ["parent"]
+    ordering_fields = ["start_date", "created_at"]
+    ordering = ["-start_date"]
+
+    def get_queryset(self):
+        """Filter history for current babysitter"""
+        return BabysitterRequest.objects.filter(
+            babysitter=self.request.user,
+            status="COMPLETED"
+        )

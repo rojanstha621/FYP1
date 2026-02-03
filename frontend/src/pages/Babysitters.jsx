@@ -16,18 +16,22 @@ export default function Babysitters() {
     e.preventDefault()
     setMessage('')
     const form = new FormData(e.target)
+    
+    const hourlyRate = parseFloat(form.get('hourly_rate')) || 15.00
+    
     try {
       await createRequest.mutateAsync({
         babysitter: selected.id,
         child: form.get('child'),
         start_date: form.get('start_date'),
         end_date: form.get('end_date'),
-        hourly_rate: form.get('hourly_rate') || selected.hourly_rate || 0,
+        hourly_rate: hourlyRate,
       })
-      setMessage('Request created')
+      setMessage('Request created successfully!')
       setSelected(null)
     } catch (err) {
-      setMessage('Failed to create request')
+      console.error('Request error:', err)
+      setMessage(err.response?.data?.detail || 'Failed to create request')
     }
   }
 
@@ -58,18 +62,55 @@ export default function Babysitters() {
 
       <div className="grid gap-4">
         {results?.length === 0 && <div className="text-gray-500">No babysitters found</div>}
-        {results?.map((u) => (
-          <div key={u.id} className="bg-white shadow rounded-lg p-4 flex justify-between items-center">
-            <div>
-              <div className="font-medium">{u.first_name} {u.last_name}</div>
-              <div className="text-sm text-textSecondary">{u.email} • {u.babysitter_profile?.city}</div>
-              <div className="text-xs text-textSecondary">Rating: {u.babysitter_profile?.average_rating ?? '—'}</div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Link to={`/babysitters/${u.id}`} className="btn-secondary">
-                View Profile
-              </Link>
-              <button className="btn-secondary" onClick={() => setSelected(u)}>Request</button>
+        {results?.map((babysitter) => (
+          <div key={babysitter.id} className="bg-white shadow rounded-lg p-6 hover:shadow-md transition-shadow">
+            <div className="flex items-start gap-4">
+              {/* Profile Picture */}
+              <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-gray-200 flex-shrink-0">
+                {babysitter.profile?.profile_picture ? (
+                  <img 
+                    src={babysitter.profile.profile_picture} 
+                    alt={`${babysitter.first_name} ${babysitter.last_name}`}
+                    className="w-full h-full object-cover" 
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400 text-xl font-semibold">
+                    {babysitter.first_name[0]}{babysitter.last_name[0]}
+                  </div>
+                )}
+              </div>
+
+              {/* Info */}
+              <div className="flex-1">
+                <h3 className="font-semibold text-lg">{babysitter.first_name} {babysitter.last_name}</h3>
+                <p className="text-sm text-gray-600">{babysitter.email}</p>
+                {babysitter.phone_number && (
+                  <p className="text-sm text-gray-600">{babysitter.phone_number}</p>
+                )}
+                {babysitter.profile?.bio && (
+                  <p className="text-sm text-gray-700 mt-2 line-clamp-2">{babysitter.profile.bio}</p>
+                )}
+                <div className="flex items-center gap-4 mt-2">
+                  <div className="flex items-center gap-1">
+                    <span className="text-yellow-500">⭐</span>
+                    <span className="text-sm font-medium">{babysitter.average_rating?.toFixed(1) || '0.0'}</span>
+                    <span className="text-xs text-gray-500">({babysitter.total_reviews || 0} reviews)</span>
+                  </div>
+                  {babysitter.profile?.address && (
+                    <span className="text-sm text-gray-600">📍 {babysitter.profile.address}</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex flex-col gap-2">
+                <Link to={`/babysitters/${babysitter.id}`} className="btn-primary text-center">
+                  View Profile
+                </Link>
+                <button className="btn-secondary" onClick={() => setSelected(babysitter)}>
+                  Send Request
+                </button>
+              </div>
             </div>
           </div>
         ))}
@@ -99,8 +140,15 @@ export default function Babysitters() {
                 <input type="datetime-local" name="end_date" className="form-input" required />
               </div>
               <div>
-                <label className="form-label">Hourly rate (optional)</label>
-                <input name="hourly_rate" className="form-input" placeholder="0" />
+                <label className="form-label">Hourly Rate</label>
+                <input 
+                  name="hourly_rate" 
+                  type="number" 
+                  step="0.01"
+                  className="form-input" 
+                  placeholder="15.00"
+                  defaultValue="15.00"
+                />
               </div>
               <div className="flex justify-end gap-2">
                 <button type="button" className="btn-secondary" onClick={() => setSelected(null)}>Cancel</button>

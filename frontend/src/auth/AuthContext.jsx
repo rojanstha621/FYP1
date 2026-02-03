@@ -12,10 +12,15 @@ export const AuthProvider = ({ children }) => {
   const qc = useQueryClient()
   const { data, isLoading, refetch } = useMe()
   const [user, setUser] = useState(null)
+  const [isInitializing, setIsInitializing] = useState(true)
 
   useEffect(() => {
     setUser(data?.user ?? null)
-  }, [data])
+    // Once we have data (or confirmed no data), we're done initializing
+    if (!isLoading) {
+      setIsInitializing(false)
+    }
+  }, [data, isLoading])
 
   // expose a setter that also updates the cached `me` query
   const setUserAndCache = (userObj) => {
@@ -59,7 +64,7 @@ export const AuthProvider = ({ children }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading: isLoading, login, logout, register, setUser: setUserAndCache }}>
+    <AuthContext.Provider value={{ user, loading: isLoading || isInitializing, login, logout, register, setUser: setUserAndCache }}>
       {children}
     </AuthContext.Provider>
   )

@@ -37,6 +37,16 @@ export default function NavBar() {
                 </>
               )}
 
+              {/* Babysitter specific links */}
+              {user.role === 'BABYSITTER' && (
+                <>
+                  <Link to="/babysitter/requests" className="text-sm text-accent hover:underline">Requests</Link>
+                  <Link to="/babysitter/bookings" className="text-sm text-accent hover:underline">My Bookings</Link>
+                  <Link to="/babysitter/reviews" className="text-sm text-accent hover:underline">Reviews</Link>
+                  <Link to="/babysitter/history" className="text-sm text-accent hover:underline">History</Link>
+                </>
+              )}
+
               <Link 
                 to="/profile" 
                 className="text-sm text-accent hover:underline focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-accent transition"

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import ParentProfile, ChildProfile, BabysitterRequest, BabysitterReview
-from account.models import User
+from account.models import User, UserProfile
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -10,6 +10,110 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ["id", "email", "first_name", "last_name", "phone_number"]
         read_only_fields = ["id"]
+
+
+class BabysitterListSerializer(serializers.ModelSerializer):
+    """Serializer for babysitter listings"""
+    
+    profile = serializers.SerializerMethodField()
+    average_rating = serializers.SerializerMethodField()
+    total_reviews = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "email",
+            "first_name",
+            "last_name",
+            "phone_number",
+            "profile",
+            "average_rating",
+            "total_reviews",
+        ]
+        read_only_fields = fields
+    
+    def get_profile(self, obj):
+        """Get user profile information"""
+        try:
+            profile = obj.profile
+            return {
+                "profile_picture": profile.profile_picture.url if profile.profile_picture else None,
+                "bio": profile.bio,
+                "address": profile.address,
+            }
+        except UserProfile.DoesNotExist:
+            return None
+    
+    def get_average_rating(self, obj):
+        """Calculate average rating from reviews"""
+        reviews = obj.reviews_received.all()
+        if reviews.exists():
+            total = sum(r.rating for r in reviews)
+            return round(total / reviews.count(), 2)
+        return 0
+    
+    def get_total_reviews(self, obj):
+        """Get total number of reviews"""
+        return obj.reviews_received.count()
+
+
+class BabysitterDetailSerializer(serializers.ModelSerializer):
+    """Detailed serializer for babysitter profile"""
+    
+    profile = serializers.SerializerMethodField()
+    average_rating = serializers.SerializerMethodField()
+    total_reviews = serializers.SerializerMethodField()
+    reviews = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "email",
+            "first_name",
+            "last_name",
+            "phone_number",
+            "profile",
+            "average_rating",
+            "total_reviews",
+            "reviews",
+        ]
+        read_only_fields = fields
+    
+    def get_profile(self, obj):
+        """Get user profile information"""
+        try:
+            profile = obj.profile
+            return {
+                "profile_picture": profile.profile_picture.url if profile.profile_picture else None,
+                "bio": profile.bio,
+                "address": profile.address,
+            }
+        except UserProfile.DoesNotExist:
+            return None
+    
+    def get_average_rating(self, obj):
+        """Calculate average rating from reviews"""
+        reviews = obj.reviews_received.all()
+        if reviews.exists():
+            total = sum(r.rating for r in reviews)
+            return round(total / reviews.count(), 2)
+        return 0
+    
+    def get_total_reviews(self, obj):
+        """Get total number of reviews"""
+        return obj.reviews_received.count()
+    
+    def get_reviews(self, obj):
+        """Get recent reviews (limit 10)"""
+        reviews = obj.reviews_received.all()[:10]
+        return [{
+            "rating": r.rating,
+            "comment": r.comment,
+            "parent_name": f"{r.parent.user.first_name} {r.parent.user.last_name}",
+            "created_at": r.created_at,
+        } for r in reviews]
 
 
 class ParentProfileSerializer(serializers.ModelSerializer):
@@ -133,13 +237,29 @@ class BabysitterRequestSerializer(serializers.ModelSerializer):
         if data.get("start_date") and data.get("end_date"):
             if data["start_date"] >= data["end_date"]:
                 raise serializers.ValidationError("Start date must be before end date.")
+        
+        # Ensure hourly_rate has a default value
+        if not data.get("hourly_rate"):
+            data["hourly_rate"] = 15.00
+        
         return data
 
     def create(self, validated_data):
         """Create request and calculate total cost"""
+        from decimal import Decimal
+        
         request_obj = BabysitterRequest.objects.create(**validated_data)
-        request_obj.calculate_total_cost()
-        request_obj.save()
+        
+        # Calculate total cost safely
+        try:
+            duration = (request_obj.end_date - request_obj.start_date).total_seconds() / 3600
+            request_obj.total_cost = Decimal(str(request_obj.hourly_rate)) * Decimal(str(duration))
+            request_obj.save()
+        except Exception:
+            # If calculation fails, set a default
+            request_obj.total_cost = request_obj.hourly_rate
+            request_obj.save()
+        
         return request_obj
 
 

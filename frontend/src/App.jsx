@@ -15,6 +15,12 @@ import RequestDetail from './pages/RequestDetail'
 import BookingHistory from './pages/BookingHistory'
 import Reviews from './pages/Reviews'
 
+// Babysitter pages
+import IncomingRequests from './pages/IncomingRequests'
+import MyBookings from './pages/MyBookings'
+import BabysitterReviews from './pages/BabysitterReviews'
+import BabysitterBookingHistory from './pages/BabysitterBookingHistory'
+
 import Layout from './components/Layout'
 
 export default function App() {
@@ -113,6 +119,43 @@ export default function App() {
           element={
             <ProtectedRoute parentOnly>
               <Reviews />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Babysitter Routes */}
+        <Route
+          path="/babysitter/requests"
+          element={
+            <ProtectedRoute babysitterOnly>
+              <IncomingRequests />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/babysitter/bookings"
+          element={
+            <ProtectedRoute babysitterOnly>
+              <MyBookings />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/babysitter/reviews"
+          element={
+            <ProtectedRoute babysitterOnly>
+              <BabysitterReviews />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/babysitter/history"
+          element={
+            <ProtectedRoute babysitterOnly>
+              <BabysitterBookingHistory />
             </ProtectedRoute>
           }
         />

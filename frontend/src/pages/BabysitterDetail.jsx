@@ -16,20 +16,23 @@ export default function BabysitterDetail() {
     setMessage('')
     const data = new FormData(e.target)
     
+    const hourlyRate = parseFloat(data.get('hourly_rate')) || 15.00
+    
     try {
       await createRequest.mutateAsync({
         babysitter: id,
         child: data.get('child'),
         start_date: data.get('start_date'),
         end_date: data.get('end_date'),
-        hourly_rate: parseFloat(data.get('hourly_rate')) || 15,
-        special_requirements: data.get('special_requirements'),
+        hourly_rate: hourlyRate,
+        special_requirements: data.get('special_requirements') || '',
       })
-      setMessage('Request sent successfully')
+      setMessage('Request sent successfully!')
       setShowRequestForm(false)
       e.target.reset()
     } catch (err) {
-      setMessage('Failed to send request')
+      console.error('Request error:', err)
+      setMessage(err.response?.data?.detail || 'Failed to send request')
     }
   }
 
@@ -158,65 +161,49 @@ export default function BabysitterDetail() {
             )}
             
             {/* Rating */}
-            {babysitter.babysitter_profile && (
-              <div className="mt-3 flex items-center gap-4">
-                {babysitter.babysitter_profile.average_rating > 0 ? (
-                  <>
-                    <div className="flex items-center gap-1">
-                      <StarRating rating={Math.round(babysitter.babysitter_profile.average_rating)} />
-                      <span className="text-sm font-medium">
-                        {parseFloat(babysitter.babysitter_profile.average_rating).toFixed(1)}
-                      </span>
-                    </div>
-                    <span className="text-sm text-textSecondary">
-                      ({babysitter.babysitter_profile.total_ratings} reviews)
+            <div className="mt-3 flex items-center gap-4">
+              {babysitter.average_rating > 0 ? (
+                <>
+                  <div className="flex items-center gap-1">
+                    <StarRating rating={Math.round(babysitter.average_rating)} />
+                    <span className="text-sm font-medium">
+                      {parseFloat(babysitter.average_rating).toFixed(1)}
                     </span>
-                  </>
-                ) : (
-                  <span className="text-sm text-textSecondary">No ratings yet</span>
-                )}
-                
-                {babysitter.babysitter_profile.verified && (
-                  <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full font-medium">
-                    ✓ Verified
+                  </div>
+                  <span className="text-sm text-textSecondary">
+                    ({babysitter.total_reviews} reviews)
                   </span>
-                )}
-              </div>
-            )}
+                </>
+              ) : (
+                <span className="text-sm text-textSecondary">No ratings yet</span>
+              )}
+            </div>
           </div>
         </div>
 
         {/* Bio */}
-        {babysitter.babysitter_profile?.bio && (
+        {babysitter.profile?.bio && (
           <div className="mb-6">
             <h4 className="font-semibold mb-2">About</h4>
-            <p className="text-gray-700">{babysitter.babysitter_profile.bio}</p>
+            <p className="text-gray-700">{babysitter.profile.bio}</p>
           </div>
         )}
 
         {/* Location */}
-        {(babysitter.babysitter_profile?.city || babysitter.babysitter_profile?.state) && (
+        {babysitter.profile?.address && (
           <div className="mb-6">
             <h4 className="font-semibold mb-2">Location</h4>
-            <p className="text-gray-700">
-              {babysitter.babysitter_profile.city}
-              {babysitter.babysitter_profile.city && babysitter.babysitter_profile.state && ', '}
-              {babysitter.babysitter_profile.state}
-              {babysitter.babysitter_profile.zip_code && ` ${babysitter.babysitter_profile.zip_code}`}
-            </p>
-            {babysitter.babysitter_profile.address && (
-              <p className="text-sm text-textSecondary">{babysitter.babysitter_profile.address}</p>
-            )}
+            <p className="text-gray-700">📍 {babysitter.profile.address}</p>
           </div>
         )}
 
         {/* Reviews Section */}
-        {babysitter.reviews_received && babysitter.reviews_received.length > 0 && (
+        {babysitter.reviews && babysitter.reviews.length > 0 && (
           <div className="mt-6 border-t pt-6">
-            <h4 className="font-semibold mb-4">Reviews ({babysitter.reviews_received.length})</h4>
+            <h4 className="font-semibold mb-4">Reviews ({babysitter.reviews.length})</h4>
             <div className="grid gap-4">
-              {babysitter.reviews_received.map((review) => (
-                <div key={review.id} className="bg-gray-50 p-4 rounded">
+              {babysitter.reviews.map((review, idx) => (
+                <div key={idx} className="bg-gray-50 p-4 rounded">
                   <div className="flex items-center gap-2 mb-2">
                     <StarRating rating={review.rating} />
                     <span className="text-sm text-textSecondary">
@@ -226,9 +213,9 @@ export default function BabysitterDetail() {
                   {review.comment && (
                     <p className="text-sm text-gray-700">{review.comment}</p>
                   )}
-                  {review.parent_info && (
+                  {review.parent_name && (
                     <p className="text-xs text-textSecondary mt-2">
-                      — {review.parent_info.first_name} {review.parent_info.last_name}
+                      — {review.parent_name}
                     </p>
                   )}
                 </div>
@@ -237,10 +224,7 @@ export default function BabysitterDetail() {
           </div>
         )}
 
-        {/* Member Since */}
-        <div className="mt-6 text-xs text-textSecondary border-t pt-4">
-          Member since {new Date(babysitter.created_at).toLocaleDateString()}
-        </div>
+        {/* Member Since - removed since created_at may not be in response */}
       </div>
     </div>
   )

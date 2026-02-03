@@ -1,8 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { adminUsers, adminUserDetail, adminUserUpdate, adminUserDelete } from './account'
 
-export function useAdminUsers() {
-  return useQuery(['adminUsers'], () => adminUsers().then((res) => res.data))
+export function useAdminUsers(options = {}) {
+  return useQuery(['adminUsers'], () => adminUsers().then((res) => res.data), {
+    enabled: options.enabled !== false,
+    ...options,
+  })
 }
 
 export function useAdminUser(id) {
@@ -257,6 +260,101 @@ export function useDeleteReview() {
 
 export function useBookingHistory() {
   return useQuery(['bookingHistory'], () => bookingHistory().then((res) => res.data), {
+    enabled: !!localStorage.getItem('access'),
+  })
+}
+
+// --- Babysitter hooks ---
+import {
+  getIncomingRequests,
+  getRequestDetail as getBabysitterRequestDetail,
+  acceptRequest,
+  rejectRequest,
+  getMyBookings,
+  getBookingDetail,
+  completeBooking,
+  getUpcomingBookings as getBabysitterUpcomingBookings,
+  getPastBookings as getBabysitterPastBookings,
+  getReceivedReviews,
+  getBabysitterHistory,
+} from './babysitter'
+
+export function useIncomingRequests() {
+  return useQuery(['incomingRequests'], () => getIncomingRequests().then((res) => res.data), {
+    enabled: !!localStorage.getItem('access'),
+  })
+}
+
+export function useBabysitterRequestDetail(id) {
+  return useQuery(['babysitterRequest', id], () => getBabysitterRequestDetail(id).then((res) => res.data), {
+    enabled: !!id && !!localStorage.getItem('access'),
+  })
+}
+
+export function useAcceptRequest() {
+  const qc = useQueryClient()
+  return useMutation((id) => acceptRequest(id).then((res) => res.data), {
+    onSuccess: () => {
+      qc.invalidateQueries(['incomingRequests'])
+      qc.invalidateQueries(['myBookings'])
+      qc.invalidateQueries(['babysitterRequest'])
+    },
+  })
+}
+
+export function useRejectRequest() {
+  const qc = useQueryClient()
+  return useMutation((id) => rejectRequest(id).then((res) => res.data), {
+    onSuccess: () => {
+      qc.invalidateQueries(['incomingRequests'])
+      qc.invalidateQueries(['babysitterRequest'])
+    },
+  })
+}
+
+export function useMyBookings() {
+  return useQuery(['myBookings'], () => getMyBookings().then((res) => res.data), {
+    enabled: !!localStorage.getItem('access'),
+  })
+}
+
+export function useBabysitterBookingDetail(id) {
+  return useQuery(['babysitterBooking', id], () => getBookingDetail(id).then((res) => res.data), {
+    enabled: !!id && !!localStorage.getItem('access'),
+  })
+}
+
+export function useCompleteBooking() {
+  const qc = useQueryClient()
+  return useMutation((id) => completeBooking(id).then((res) => res.data), {
+    onSuccess: () => {
+      qc.invalidateQueries(['myBookings'])
+      qc.invalidateQueries(['babysitterBooking'])
+      qc.invalidateQueries(['babysitterHistory'])
+    },
+  })
+}
+
+export function useBabysitterUpcomingBookings() {
+  return useQuery(['babysitterUpcomingBookings'], () => getBabysitterUpcomingBookings().then((res) => res.data), {
+    enabled: !!localStorage.getItem('access'),
+  })
+}
+
+export function useBabysitterPastBookings() {
+  return useQuery(['babysitterPastBookings'], () => getBabysitterPastBookings().then((res) => res.data), {
+    enabled: !!localStorage.getItem('access'),
+  })
+}
+
+export function useReceivedReviews() {
+  return useQuery(['receivedReviews'], () => getReceivedReviews().then((res) => res.data), {
+    enabled: !!localStorage.getItem('access'),
+  })
+}
+
+export function useBabysitterHistory(params) {
+  return useQuery(['babysitterHistory', params], () => getBabysitterHistory(params).then((res) => res.data), {
     enabled: !!localStorage.getItem('access'),
   })
 }

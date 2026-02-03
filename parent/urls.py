@@ -7,16 +7,29 @@ from .views import (
     BabysitterListingView,
     BabysitterReviewViewSet,
     BookingHistoryViewSet,
+    BabysitterIncomingRequestsViewSet,
+    BabysitterBookingsViewSet,
+    BabysitterReviewsReceivedViewSet,
+    BabysitterHistoryViewSet,
 )
 
-router = DefaultRouter()
-router.register(r"profile", ParentProfileViewSet, basename="parent-profile")
-router.register(r"children", ChildProfileViewSet, basename="child-profile")
-router.register(r"requests", BabysitterRequestViewSet, basename="babysitter-request")
-router.register(r"listings", BabysitterListingView, basename="babysitter-listing")
-router.register(r"reviews", BabysitterReviewViewSet, basename="babysitter-review")
-router.register(r"history", BookingHistoryViewSet, basename="booking-history")
+# Parent routes
+parent_router = DefaultRouter()
+parent_router.register(r"profile", ParentProfileViewSet, basename="parent-profile")
+parent_router.register(r"children", ChildProfileViewSet, basename="child-profile")
+parent_router.register(r"requests", BabysitterRequestViewSet, basename="babysitter-request")
+parent_router.register(r"listings", BabysitterListingView, basename="babysitter-listing")
+parent_router.register(r"reviews", BabysitterReviewViewSet, basename="babysitter-review")
+parent_router.register(r"history", BookingHistoryViewSet, basename="booking-history")
+
+# Babysitter routes
+babysitter_router = DefaultRouter()
+babysitter_router.register(r"requests", BabysitterIncomingRequestsViewSet, basename="babysitter-incoming-requests")
+babysitter_router.register(r"bookings", BabysitterBookingsViewSet, basename="babysitter-bookings")
+babysitter_router.register(r"reviews", BabysitterReviewsReceivedViewSet, basename="babysitter-reviews-received")
+babysitter_router.register(r"history", BabysitterHistoryViewSet, basename="babysitter-history")
 
 urlpatterns = [
-    path("", include(router.urls)),
+    path("", include(parent_router.urls)),
+    path("babysitter/", include(babysitter_router.urls)),
 ]

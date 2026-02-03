@@ -1,7 +1,17 @@
 import React, { useState, useMemo } from "react"
 import { Link } from "react-router-dom"
 import { useAuth } from "../auth/AuthContext"
-import { useChildren, useUpcomingBookings, useReviews, useAdminUsers, useUpdateAdminUser, useDeleteAdminUser } from "../api/hooks"
+import { 
+  useChildren, 
+  useUpcomingBookings, 
+  useReviews, 
+  useAdminUsers, 
+  useUpdateAdminUser, 
+  useDeleteAdminUser,
+  useIncomingRequests,
+  useBabysitterUpcomingBookings,
+  useReceivedReviews,
+} from "../api/hooks"
 import Alert from "../components/Alert"
 
 export default function Dashboard() {
@@ -9,7 +19,10 @@ export default function Dashboard() {
   const { data: children } = useChildren()
   const { data: upcomingBookings } = useUpcomingBookings()
   const { data: reviews } = useReviews()
-  const { data: allUsers, isLoading: loadingUsers } = useAdminUsers()
+  
+  // Only fetch admin data if user is admin
+  const isAdmin = user?.role === 'ADMIN'
+  const { data: allUsers, isLoading: loadingUsers } = useAdminUsers({ enabled: isAdmin })
   const updateUser = useUpdateAdminUser()
   const deleteUser = useDeleteAdminUser()
 
@@ -314,6 +327,9 @@ export default function Dashboard() {
         </>
       )}
 
+      {/* BABYSITTER SECTION */}
+      {user?.role === "BABYSITTER" && <BabysitterDashboard />}
+
       {/* PARENT SECTION */}
       {user?.role === "PARENT" && (
         <>
@@ -558,5 +574,146 @@ export default function Dashboard() {
         </div>
       )}
     </div>
+  )
+}
+
+// Babysitter Dashboard Component
+function BabysitterDashboard() {
+  const { data: incomingRequests } = useIncomingRequests()
+  const { data: upcomingBookings } = useBabysitterUpcomingBookings()
+  const { data: reviews } = useReceivedReviews()
+
+  const pendingRequests = incomingRequests?.filter(r => r.status === 'PENDING') || []
+  const avgRating = reviews && reviews.length > 0
+    ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
+    : '0.0'
+
+  return (
+    <>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+        <div className="card bg-gradient-to-br from-blue-50 to-blue-100">
+          <h3 className="text-sm font-medium text-gray-700">
+            Pending Requests
+          </h3>
+          <p className="text-3xl font-bold mt-2 text-blue-600">
+            {pendingRequests.length}
+          </p>
+          <Link to="/babysitter/requests" className="text-xs text-blue-700 hover:underline mt-2 inline-block">
+            View requests →
+          </Link>
+        </div>
+
+        <div className="card bg-gradient-to-br from-green-50 to-green-100">
+          <h3 className="text-sm font-medium text-gray-700">
+            Upcoming Bookings
+          </h3>
+          <p className="text-3xl font-bold mt-2 text-green-600">
+            {upcomingBookings?.length || 0}
+          </p>
+          <Link to="/babysitter/bookings" className="text-xs text-green-700 hover:underline mt-2 inline-block">
+            View bookings →
+          </Link>
+        </div>
+
+        <div className="card bg-gradient-to-br from-yellow-50 to-yellow-100">
+          <h3 className="text-sm font-medium text-gray-700">
+            Average Rating
+          </h3>
+          <div className="flex items-baseline gap-2 mt-2">
+            <p className="text-3xl font-bold text-yellow-600">
+              {avgRating}
+            </p>
+            <span className="text-yellow-500 text-xl">⭐</span>
+          </div>
+          <Link to="/babysitter/reviews" className="text-xs text-yellow-700 hover:underline mt-2 inline-block">
+            View reviews →
+          </Link>
+        </div>
+
+        <div className="card bg-gradient-to-br from-purple-50 to-purple-100">
+          <h3 className="text-sm font-medium text-gray-700">
+            Total Reviews
+          </h3>
+          <p className="text-3xl font-bold mt-2 text-purple-600">
+            {reviews?.length || 0}
+          </p>
+          <Link to="/babysitter/reviews" className="text-xs text-purple-700 hover:underline mt-2 inline-block">
+            See all reviews →
+          </Link>
+        </div>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="card mb-8">
+        <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <Link
+            to="/babysitter/requests"
+            className="block rounded-lg border p-4 hover:bg-blue-50 hover:border-blue-300 transition"
+          >
+            <div className="text-2xl mb-2">📬</div>
+            <h3 className="font-medium">View Requests</h3>
+            <p className="text-xs text-gray-600 mt-1">
+              Check incoming booking requests
+            </p>
+          </Link>
+
+          <Link
+            to="/babysitter/bookings"
+            className="block rounded-lg border p-4 hover:bg-green-50 hover:border-green-300 transition"
+          >
+            <div className="text-2xl mb-2">📅</div>
+            <h3 className="font-medium">My Bookings</h3>
+            <p className="text-xs text-gray-600 mt-1">
+              Manage your accepted bookings
+            </p>
+          </Link>
+
+          <Link
+            to="/babysitter/history"
+            className="block rounded-lg border p-4 hover:bg-purple-50 hover:border-purple-300 transition"
+          >
+            <div className="text-2xl mb-2">📊</div>
+            <h3 className="font-medium">Booking History</h3>
+            <p className="text-xs text-gray-600 mt-1">
+              View completed bookings and earnings
+            </p>
+          </Link>
+        </div>
+      </div>
+
+      {/* Recent Activity */}
+      {pendingRequests.length > 0 && (
+        <div className="card">
+          <h2 className="text-lg font-semibold mb-4">Recent Requests</h2>
+          <div className="space-y-3">
+            {pendingRequests.slice(0, 3).map((request) => (
+              <div key={request.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                <div className="flex-1">
+                  <p className="font-medium">{request.parent_email}</p>
+                  <p className="text-xs text-gray-600">
+                    {new Date(request.start_date).toLocaleDateString()} • ${request.hourly_rate}/hr
+                  </p>
+                </div>
+                <Link
+                  to={`/babysitter/requests`}
+                  className="text-xs text-blue-600 hover:underline"
+                >
+                  View →
+                </Link>
+              </div>
+            ))}
+          </div>
+          {pendingRequests.length > 3 && (
+            <Link
+              to="/babysitter/requests"
+              className="text-sm text-blue-600 hover:underline mt-4 inline-block"
+            >
+              View all {pendingRequests.length} requests →
+            </Link>
+          )}
+        </div>
+      )}
+    </>
   )
 }
