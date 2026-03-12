@@ -279,6 +279,15 @@ import {
   getBabysitterHistory,
 } from './babysitter'
 
+import {
+  getAvailability,
+  createAvailability,
+  updateAvailability,
+  deleteAvailability,
+  getBabysitterAvailability,
+  getBabysitterBookings,
+} from './availability'
+
 export function useIncomingRequests() {
   return useQuery(['incomingRequests'], () => getIncomingRequests().then((res) => res.data), {
     enabled: !!localStorage.getItem('access'),
@@ -357,4 +366,53 @@ export function useBabysitterHistory(params) {
   return useQuery(['babysitterHistory', params], () => getBabysitterHistory(params).then((res) => res.data), {
     enabled: !!localStorage.getItem('access'),
   })
+}
+
+// ============ Availability Management Hooks ============
+
+export function useAvailability() {
+  return useQuery(['availability'], () => getAvailability().then((res) => res.data), {
+    enabled: !!localStorage.getItem('access'),
+  })
+}
+
+export function useCreateAvailability() {
+  const qc = useQueryClient()
+  return useMutation((payload) => createAvailability(payload).then((res) => res.data), {
+    onSuccess: () => qc.invalidateQueries(['availability']),
+  })
+}
+
+export function useUpdateAvailability() {
+  const qc = useQueryClient()
+  return useMutation(({ id, payload }) => updateAvailability(id, payload).then((res) => res.data), {
+    onSuccess: () => qc.invalidateQueries(['availability']),
+  })
+}
+
+export function useDeleteAvailability() {
+  const qc = useQueryClient()
+  return useMutation((id) => deleteAvailability(id), {
+    onSuccess: () => qc.invalidateQueries(['availability']),
+  })
+}
+
+export function useBabysitterAvailability(babysitterId) {
+  return useQuery(
+    ['babysitterAvailability', babysitterId], 
+    () => getBabysitterAvailability(babysitterId).then((res) => res.data),
+    {
+      enabled: !!babysitterId && !!localStorage.getItem('access'),
+    }
+  )
+}
+
+export function useBabysitterBookings(babysitterId, date) {
+  return useQuery(
+    ['babysitterBookings', babysitterId, date], 
+    () => getBabysitterBookings(babysitterId, date).then((res) => res.data),
+    {
+      enabled: !!babysitterId && !!date && !!localStorage.getItem('access'),
+    }
+  )
 }

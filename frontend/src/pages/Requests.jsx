@@ -138,6 +138,20 @@ function CreateRequestForm({ onClose }) {
     setMessage('')
     const data = new FormData(e.target)
     
+    const startDate = new Date(data.get('start_date'))
+    const endDate = new Date(data.get('end_date'))
+    
+    // Basic validation
+    if (startDate <= new Date()) {
+      setMessage('Booking date must be in the future')
+      return
+    }
+
+    if (startDate >= endDate) {
+      setMessage('End time must be after start time')
+      return
+    }
+    
     try {
       await createRequest.mutateAsync({
         child: data.get('child'),
@@ -150,7 +164,32 @@ function CreateRequestForm({ onClose }) {
       setMessage('Request created successfully')
       setTimeout(() => onClose(), 1500)
     } catch (err) {
-      setMessage('Failed to create request')
+      console.error('Request creation error:', err)
+      
+      // Handle specific validation errors from backend
+      if (err.response?.data?.non_field_errors) {
+        const errorMsg = err.response.data.non_field_errors[0]
+        if (errorMsg.includes('booking during this time') || errorMsg.includes('already has a booking')) {
+          setMessage('Selected time is already booked. Please choose another time.')
+        } else {
+          setMessage(errorMsg)
+        }
+      } else if (err.response?.data?.detail) {
+        const errorMsg = err.response.data.detail
+        if (errorMsg.includes('booking during this time') || errorMsg.includes('already has a booking')) {
+          setMessage('Selected time is already booked. Please choose another time.')
+        } else {
+          setMessage(errorMsg)
+        }
+      } else if (err.response?.data) {
+        // Handle field-specific errors
+        const errors = Object.entries(err.response.data)
+          .map(([field, messages]) => `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`)
+          .join('; ')
+        setMessage(errors)
+      } else {
+        setMessage('Failed to create request')
+      }
     }
   }
 

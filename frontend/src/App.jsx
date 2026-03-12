@@ -20,6 +20,7 @@ import IncomingRequests from './pages/IncomingRequests'
 import MyBookings from './pages/MyBookings'
 import BabysitterReviews from './pages/BabysitterReviews'
 import BabysitterBookingHistory from './pages/BabysitterBookingHistory'
+import BabysitterAvailability from './pages/BabysitterAvailability'
 
 import Layout from './components/Layout'
 
@@ -156,6 +157,15 @@ export default function App() {
           element={
             <ProtectedRoute babysitterOnly>
               <BabysitterBookingHistory />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/babysitter/availability"
+          element={
+            <ProtectedRoute babysitterOnly>
+              <BabysitterAvailability />
             </ProtectedRoute>
           }
         />

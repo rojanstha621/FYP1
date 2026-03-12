@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import ParentProfile, ChildProfile, BabysitterRequest, BabysitterReview
+from .models import ParentProfile, ChildProfile, BabysitterRequest, BabysitterReview, BabysitterAvailability
 from account.models import User, UserProfile
 
 
@@ -233,14 +233,77 @@ class BabysitterRequestSerializer(serializers.ModelSerializer):
         ]
 
     def validate(self, data):
-        """Validate start date is before end date"""
-        if data.get("start_date") and data.get("end_date"):
-            if data["start_date"] >= data["end_date"]:
+        """Validate booking request against availability and double bookings"""
+        start_date = data.get("start_date")
+        end_date = data.get("end_date")
+        babysitter = data.get("babysitter")
+        
+        # Basic date validation
+        if start_date and end_date:
+            if start_date >= end_date:
                 raise serializers.ValidationError("Start date must be before end date.")
         
         # Ensure hourly_rate has a default value
         if not data.get("hourly_rate"):
             data["hourly_rate"] = 15.00
+
+        # Skip availability checks if updating (partial validation) or no babysitter selected
+        if not babysitter or not start_date or not end_date:
+            return data
+
+        # Check babysitter availability
+        day_of_week = start_date.weekday()  # Monday = 0, Sunday = 6
+        booking_start_time = start_date.time()
+        booking_end_time = end_date.time()
+
+        # Check if booking spans multiple days
+        if start_date.date() != end_date.date():
+            raise serializers.ValidationError(
+                "Bookings cannot span multiple days. Please create separate bookings for each day."
+            )
+
+        # Find matching availability slots
+        availability_slots = BabysitterAvailability.objects.filter(
+            babysitter=babysitter,
+            day_of_week=day_of_week
+        )
+
+        # Check if any availability slot covers the entire booking time
+        is_available = False
+        for slot in availability_slots:
+            if (booking_start_time >= slot.start_time and 
+                booking_end_time <= slot.end_time):
+                is_available = True
+                break
+
+        if not is_available:
+            day_name = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 
+                       'Friday', 'Saturday', 'Sunday'][day_of_week]
+            raise serializers.ValidationError(
+                f"Babysitter is not available on {day_name} "
+                f"from {booking_start_time.strftime('%H:%M')} to {booking_end_time.strftime('%H:%M')}."
+            )
+
+        # Check for booking conflicts with existing accepted/completed bookings
+        # Only check against ACCEPTED and COMPLETED bookings (not PENDING)
+        conflicting_bookings = BabysitterRequest.objects.filter(
+            babysitter=babysitter,
+            status__in=['ACCEPTED', 'COMPLETED']
+        ).exclude(
+            # Exclude current instance if updating
+            id=self.instance.id if self.instance else None
+        )
+
+        for booking in conflicting_bookings:
+            # Check if the new booking overlaps with existing ones
+            # Overlap logic: existing_start < new_end AND existing_end > new_start
+            if (start_date < booking.end_date and end_date > booking.start_date):
+                raise serializers.ValidationError(
+                    f"Babysitter already has a booking during this time "
+                    f"({booking.start_date.strftime('%Y-%m-%d %H:%M')} to "
+                    f"{booking.end_date.strftime('%Y-%m-%d %H:%M')}). "
+                    f"Please choose a different time."
+                )
         
         return data
 
@@ -355,3 +418,64 @@ class BookingHistorySerializer(serializers.ModelSerializer):
         """Calculate duration in hours"""
         duration = (obj.end_date - obj.start_date).total_seconds() / 3600
         return round(duration, 2)
+
+
+class BabysitterAvailabilitySerializer(serializers.ModelSerializer):
+    """Serializer for babysitter availability management"""
+    
+    day_of_week_display = serializers.CharField(source="get_day_of_week_display", read_only=True)
+    
+    class Meta:
+        model = BabysitterAvailability
+        fields = [
+            "id",
+            "babysitter",
+            "day_of_week",
+            "day_of_week_display",
+            "start_time",
+            "end_time",
+            "created_at"
+        ]
+        read_only_fields = ["id", "babysitter", "created_at", "day_of_week_display"]
+    
+    def validate(self, attrs):
+        """Validate availability data"""
+        start_time = attrs.get('start_time')
+        end_time = attrs.get('end_time')
+        day_of_week = attrs.get('day_of_week')
+        
+        # Basic time validation
+        if start_time and end_time and start_time >= end_time:
+            raise serializers.ValidationError(
+                {"end_time": "End time must be after start time"}
+            )
+        
+        # Check for overlapping slots
+        babysitter = self.context['request'].user
+        
+        # Build queryset for overlap check
+        queryset = BabysitterAvailability.objects.filter(
+            babysitter=babysitter,
+            day_of_week=day_of_week
+        )
+        
+        # If updating, exclude current instance
+        if self.instance:
+            queryset = queryset.exclude(pk=self.instance.pk)
+        
+        # Check for overlaps
+        for slot in queryset:
+            if start_time < slot.end_time and end_time > slot.start_time:
+                raise serializers.ValidationError({
+                    "non_field_errors": [
+                        f"This time slot overlaps with existing availability: "
+                        f"{slot.start_time.strftime('%H:%M')}-{slot.end_time.strftime('%H:%M')}"
+                    ]
+                })
+        
+        return attrs
+    
+    def create(self, validated_data):
+        """Create availability slot for current user"""
+        validated_data['babysitter'] = self.context['request'].user
+        return super().create(validated_data)

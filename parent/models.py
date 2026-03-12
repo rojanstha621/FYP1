@@ -193,3 +193,74 @@ class BabysitterReview(models.Model):
 
     def __str__(self):
         return f"Review by {self.parent.user.email} for Booking {self.booking.id}"
+
+
+class BabysitterAvailability(models.Model):
+    """Model for babysitter availability schedule"""
+
+    DAY_CHOICES = [
+        (0, _("Monday")),
+        (1, _("Tuesday")),
+        (2, _("Wednesday")),
+        (3, _("Thursday")),
+        (4, _("Friday")),
+        (5, _("Saturday")),
+        (6, _("Sunday")),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    babysitter = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        limit_choices_to={"role": "BABYSITTER"},
+        related_name="availability_slots",
+    )
+    day_of_week = models.PositiveSmallIntegerField(
+        choices=DAY_CHOICES, 
+        help_text=_("Day of the week (0=Monday, 6=Sunday)")
+    )
+    start_time = models.TimeField(help_text=_("Start time for availability"))
+    end_time = models.TimeField(help_text=_("End time for availability"))
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = _("Babysitter Availability")
+        verbose_name_plural = _("Babysitter Availabilities")
+        ordering = ["day_of_week", "start_time"]
+        unique_together = ["babysitter", "day_of_week", "start_time", "end_time"]
+
+    def __str__(self):
+        day_name = self.get_day_of_week_display()
+        return f"{self.babysitter.first_name} {self.babysitter.last_name} - {day_name} {self.start_time}-{self.end_time}"
+
+    def clean(self):
+        from django.core.exceptions import ValidationError
+        
+        # Validate start_time < end_time
+        if self.start_time >= self.end_time:
+            raise ValidationError(_("Start time must be earlier than end time"))
+        
+        # Check for overlapping availability slots
+        if self.pk:
+            # If updating existing slot
+            overlapping = BabysitterAvailability.objects.filter(
+                babysitter=self.babysitter,
+                day_of_week=self.day_of_week
+            ).exclude(pk=self.pk)
+        else:
+            # If creating new slot
+            overlapping = BabysitterAvailability.objects.filter(
+                babysitter=self.babysitter,
+                day_of_week=self.day_of_week
+            )
+        
+        # Check for time overlap
+        for slot in overlapping:
+            if (self.start_time < slot.end_time and self.end_time > slot.start_time):
+                raise ValidationError(
+                    _(f"This time slot overlaps with existing availability: {slot.start_time}-{slot.end_time}")
+                )
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)

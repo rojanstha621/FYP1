@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from django.utils import timezone
-from .models import ParentProfile, ChildProfile, BabysitterRequest, BabysitterReview
+from .models import ParentProfile, ChildProfile, BabysitterRequest, BabysitterReview, BabysitterAvailability
 from .serializers import (
     ParentProfileSerializer,
     ChildProfileSerializer,
@@ -15,6 +15,7 @@ from .serializers import (
     BookingHistorySerializer,
     BabysitterListSerializer,
     BabysitterDetailSerializer,
+    BabysitterAvailabilitySerializer,
 )
 from account.models import User
 from account.permissions import IsParent, IsBabysitter
@@ -221,7 +222,61 @@ class BabysitterListingView(viewsets.ReadOnlyModelViewSet):
 
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+        
+    @action(detail=True, methods=["get"], permission_classes=[IsAuthenticated])
+    def availability(self, request, pk=None):
+        """Get availability for a specific babysitter"""
+        babysitter = self.get_object()
+        availability_slots = BabysitterAvailability.objects.filter(
+            babysitter=babysitter
+        ).order_by('day_of_week', 'start_time')
+        
+        serializer = BabysitterAvailabilitySerializer(availability_slots, many=True)
         return Response(serializer.data)
+    
+    @action(detail=True, methods=["get"], permission_classes=[IsAuthenticated])
+    def bookings(self, request, pk=None):
+        """Get existing bookings for a babysitter on a specific date"""
+        babysitter = self.get_object()
+        date_param = request.query_params.get('date')
+        
+        if not date_param:
+            return Response(
+                {"detail": "Date parameter is required (format: YYYY-MM-DD)"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            from datetime import datetime
+            target_date = datetime.strptime(date_param, '%Y-%m-%d').date()
+        except ValueError:
+            return Response(
+                {"detail": "Invalid date format. Use YYYY-MM-DD"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Get bookings for the specific date with ACCEPTED or COMPLETED status
+        bookings = BabysitterRequest.objects.filter(
+            babysitter=babysitter,
+            start_date__date=target_date,
+            status__in=['ACCEPTED', 'COMPLETED']
+        ).order_by('start_date')
+        
+        # Return simplified booking data showing time conflicts
+        booking_data = [
+            {
+                'id': booking.id,
+                'start_time': booking.start_date.strftime('%H:%M'),
+                'end_time': booking.end_date.strftime('%H:%M'),
+                'start_date': booking.start_date.isoformat(),
+                'end_date': booking.end_date.isoformat(),
+                'status': booking.status,
+                'parent_name': f"{booking.parent.user.first_name} {booking.parent.user.last_name}" if booking.parent else None
+            }
+            for booking in bookings
+        ]
+        
+        return Response(booking_data)
 
 
 class BabysitterReviewViewSet(viewsets.ModelViewSet):
@@ -317,7 +372,7 @@ class BabysitterIncomingRequestsViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated, IsBabysitter])
     def accept(self, request, pk=None):
-        """Accept a babysitter request"""
+        """Accept a babysitter request with double booking validation"""
         booking_request = self.get_object()
 
         if booking_request.status != "PENDING":
@@ -325,6 +380,27 @@ class BabysitterIncomingRequestsViewSet(viewsets.ModelViewSet):
                 {"detail": f"Cannot accept request with status {booking_request.status}."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
+        # Check for conflicting bookings before accepting
+        # Check against both ACCEPTED and COMPLETED bookings
+        conflicting_bookings = BabysitterRequest.objects.filter(
+            babysitter=request.user,
+            status__in=['ACCEPTED', 'COMPLETED']
+        ).exclude(id=booking_request.id)
+
+        for booking in conflicting_bookings:
+            # Check if the new booking overlaps with existing ones
+            # Overlap logic: existing_start < new_end AND existing_end > new_start
+            if (booking_request.start_date < booking.end_date and 
+                booking_request.end_date > booking.start_date):
+                return Response(
+                    {
+                        "detail": "Babysitter already has a booking during this time. "
+                                 f"Conflicting booking: {booking.start_date.strftime('%Y-%m-%d %H:%M')} to "
+                                 f"{booking.end_date.strftime('%Y-%m-%d %H:%M')}."
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
         booking_request.status = "ACCEPTED"
         booking_request.save()
@@ -454,3 +530,25 @@ class BabysitterHistoryViewSet(viewsets.ReadOnlyModelViewSet):
             babysitter=self.request.user,
             status="COMPLETED"
         )
+
+
+class BabysitterAvailabilityViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for babysitter availability management.
+    Allows babysitters to create, view, update, and delete their availability slots.
+    """
+
+    serializer_class = BabysitterAvailabilitySerializer
+    permission_classes = [IsAuthenticated, IsBabysitter]
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filterset_fields = ["day_of_week"]
+    ordering_fields = ["day_of_week", "start_time"]
+    ordering = ["day_of_week", "start_time"]
+
+    def get_queryset(self):
+        """Filter availability slots for current babysitter"""
+        return BabysitterAvailability.objects.filter(babysitter=self.request.user)
+
+    def perform_create(self, serializer):
+        """Create availability slot for current babysitter"""
+        serializer.save(babysitter=self.request.user)

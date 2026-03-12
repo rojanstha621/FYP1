@@ -42,6 +42,7 @@ export default function NavBar() {
                 <>
                   <Link to="/babysitter/requests" className="text-sm text-accent hover:underline">Requests</Link>
                   <Link to="/babysitter/bookings" className="text-sm text-accent hover:underline">My Bookings</Link>
+                  <Link to="/babysitter/availability" className="text-sm text-accent hover:underline">Availability</Link>
                   <Link to="/babysitter/reviews" className="text-sm text-accent hover:underline">Reviews</Link>
                   <Link to="/babysitter/history" className="text-sm text-accent hover:underline">History</Link>
                 </>
