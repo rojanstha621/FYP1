@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useMe, useUpdateMe, useProfileUpdate, useChangePassword } from '../api/hooks'
 import Alert from '../components/Alert'
+import { resolveImageUrl } from '../utils/image'
 
 export default function Profile() {
   const [message, setMessage] = useState('')
@@ -17,7 +18,7 @@ export default function Profile() {
 
   useEffect(() => {
     if (profile && profile.profile_picture) {
-      setPreviewSrc(profile.profile_picture)
+      setPreviewSrc(resolveImageUrl(profile.profile_picture))
     }
   }, [profile])
 

@@ -76,20 +76,20 @@ export default function RequestDetail() {
   }
 
   const statusColors = {
-    PENDING: 'bg-yellow-100 text-yellow-800',
-    ACCEPTED: 'bg-green-100 text-green-800',
-    REJECTED: 'bg-red-100 text-red-800',
-    CANCELLED: 'bg-gray-100 text-gray-800',
-    COMPLETED: 'bg-blue-100 text-blue-800',
+    PENDING: 'status-pending',
+    ACCEPTED: 'status-accepted',
+    REJECTED: 'status-rejected',
+    CANCELLED: 'status-cancelled',
+    COMPLETED: 'status-completed',
   }
 
   const canEdit = ['PENDING', 'ACCEPTED'].includes(request.status)
   const canCancel = ['PENDING', 'ACCEPTED'].includes(request.status)
 
   return (
-    <div className="mt-8 max-w-4xl mx-auto px-4">
+    <div className="page-wrap max-w-5xl mx-auto px-4">
       <div className="flex justify-between items-center mb-4">
-        <Link to="/requests" className="text-primary hover:underline">
+        <Link to="/requests" className="text-pink-600 hover:text-pink-700 transition-all duration-200">
           ← Back to Requests
         </Link>
         <div className="flex gap-2">
@@ -117,7 +117,8 @@ export default function RequestDetail() {
         </div>
       </div>
 
-      <h2 className="text-2xl font-semibold mb-4">Request Details</h2>
+      <h2 className="text-2xl font-bold tracking-tight mb-2">Request Details</h2>
+      <div className="text-xs text-gray-500 mb-4">1. Pick Time → 2. Confirm → 3. Done</div>
 
       {message && (
         <Alert type={message.includes('Failed') ? 'error' : 'success'} className="mb-4">
@@ -126,7 +127,7 @@ export default function RequestDetail() {
       )}
 
       {isEditing ? (
-        <div className="bg-white shadow rounded-lg p-6">
+        <div className="card">
           <h3 className="font-semibold mb-4">Edit Request</h3>
           <form onSubmit={handleUpdate} className="grid gap-4">
             <div>
@@ -184,13 +185,13 @@ export default function RequestDetail() {
           </form>
         </div>
       ) : (
-        <div className="bg-white shadow rounded-lg p-6">
+        <div className="card">
           <div className="grid gap-6">
             {/* Status */}
             <div>
-              <label className="text-sm font-medium text-textSecondary">Status</label>
+              <label className="text-sm font-medium text-gray-500">Status</label>
               <div className="mt-1">
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${statusColors[request.status]}`}>
+                <span className={statusColors[request.status]}>
                   {request.status}
                 </span>
               </div>
@@ -250,7 +251,7 @@ export default function RequestDetail() {
               <div className="mt-1 text-base">
                 <div><span className="font-medium">Hourly Rate:</span> ${parseFloat(request.hourly_rate).toFixed(2)}/hour</div>
                 {request.total_cost && (
-                  <div className="text-lg font-semibold text-primary">
+                  <div className="text-lg font-semibold text-pink-600 mt-1">
                     Total: ${parseFloat(request.total_cost).toFixed(2)}
                   </div>
                 )}
@@ -268,8 +269,8 @@ export default function RequestDetail() {
             {/* Review */}
             {request.review && (
               <div>
-                <label className="text-sm font-medium text-textSecondary">Review</label>
-                <div className="mt-1 bg-gray-50 p-3 rounded">
+                <label className="text-sm font-medium text-gray-500">Review</label>
+                <div className="mt-1 bg-pink-50 border border-pink-100 p-3 rounded-2xl">
                   <div className="flex items-center gap-2 mb-1">
                     <StarRating rating={request.review.rating} />
                   </div>

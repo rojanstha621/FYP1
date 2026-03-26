@@ -75,7 +75,9 @@ class MeView(APIView):
 
         data = {
             "user": UserBasicSerializer(request.user).data,
-            "profile": UserProfileSerializer(profile).data,
+            "profile": UserProfileSerializer(
+                profile, context={"request": request}
+            ).data,
         }
         return Response(data, status=status.HTTP_200_OK)
 
@@ -93,14 +95,16 @@ class MeView(APIView):
         user_serializer.save()
 
         profile_serializer = UserProfileSerializer(
-            profile, data=request.data, partial=True
+            profile, data=request.data, partial=True, context={"request": request}
         )
         profile_serializer.is_valid(raise_exception=True)
         profile_serializer.save()
 
         data = {
             "user": UserBasicSerializer(request.user).data,
-            "profile": UserProfileSerializer(profile).data,
+            "profile": UserProfileSerializer(
+                profile, context={"request": request}
+            ).data,
         }
         return Response(data, status=status.HTTP_200_OK)
 
@@ -118,7 +122,12 @@ class ProfileUpdateView(APIView):
     def patch(self, request):
         profile, _ = UserProfile.objects.get_or_create(user=request.user)
 
-        serializer = UserProfileSerializer(profile, data=request.data, partial=True)
+        serializer = UserProfileSerializer(
+            profile,
+            data=request.data,
+            partial=True,
+            context={"request": request},
+        )
         serializer.is_valid(raise_exception=True)
         serializer.save()
 

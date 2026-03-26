@@ -33,21 +33,21 @@ export default function MyBookings() {
   }
 
   const getBookingStatus = (booking) => {
-    if (isPast(booking.end_date)) return { label: 'Past', color: 'bg-gray-100 text-gray-800' }
-    if (isCurrent(booking.start_date, booking.end_date)) return { label: 'Ongoing', color: 'bg-blue-100 text-blue-800' }
-    if (isUpcoming(booking.start_date)) return { label: 'Upcoming', color: 'bg-green-100 text-green-800' }
-    return { label: 'Unknown', color: 'bg-gray-100 text-gray-800' }
+    if (isPast(booking.end_date)) return { label: 'Past', color: 'status-cancelled' }
+    if (isCurrent(booking.start_date, booking.end_date)) return { label: 'Ongoing', color: 'status-pending' }
+    if (isUpcoming(booking.start_date)) return { label: 'Upcoming', color: 'status-accepted' }
+    return { label: 'Unknown', color: 'status-cancelled' }
   }
 
-  if (isLoading) return <div className="mt-8 max-w-4xl mx-auto px-4">Loading...</div>
+  if (isLoading) return <div className="page-wrap max-w-4xl mx-auto px-4">Loading...</div>
 
   const upcomingBookings = bookings?.filter(b => isUpcoming(b.start_date)) || []
   const currentBookings = bookings?.filter(b => isCurrent(b.start_date, b.end_date)) || []
   const pastBookings = bookings?.filter(b => isPast(b.end_date)) || []
 
   return (
-    <div className="mt-8 max-w-6xl mx-auto px-4">
-      <h2 className="text-2xl font-semibold mb-6">My Bookings</h2>
+    <div className="page-wrap max-w-6xl mx-auto px-4">
+      <h2 className="text-2xl font-bold tracking-tight mb-6">My Bookings</h2>
 
       {message && (
         <Alert type={message.includes('Failed') ? 'error' : 'success'} className="mb-4">
@@ -59,7 +59,7 @@ export default function MyBookings() {
       {currentBookings.length > 0 && (
         <div className="mb-8">
           <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-            <span className="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></span>
+            <span className="w-3 h-3 bg-pink-500 rounded-full animate-pulse"></span>
             Ongoing Bookings
           </h3>
           <div className="grid gap-4">
@@ -111,9 +111,9 @@ export default function MyBookings() {
       )}
 
       {bookings?.length === 0 && (
-        <div className="bg-white shadow rounded-lg p-8 text-center">
+        <div className="card text-center">
           <p className="text-gray-500">No active bookings at this time</p>
-          <Link to="/babysitter/requests" className="text-blue-600 hover:underline mt-2 inline-block">
+          <Link to="/babysitter/requests" className="text-pink-600 hover:text-pink-700 mt-2 inline-block transition-all duration-200">
             Check Incoming Requests
           </Link>
         </div>
@@ -124,7 +124,7 @@ export default function MyBookings() {
 
 function BookingCard({ booking, onComplete, status, showCompleteButton }) {
   return (
-    <div className="bg-white shadow rounded-lg p-6">
+    <div className="card">
       <div className="flex justify-between items-start mb-4">
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-2">
@@ -143,7 +143,7 @@ function BookingCard({ booking, onComplete, status, showCompleteButton }) {
         {showCompleteButton && (
           <button
             onClick={() => onComplete(booking.id)}
-            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+            className="btn-primary"
           >
             Mark Complete
           </button>
@@ -174,7 +174,7 @@ function BookingCard({ booking, onComplete, status, showCompleteButton }) {
       </div>
 
       {booking.special_requirements && (
-        <div className="mt-4 p-3 bg-gray-50 rounded">
+        <div className="mt-4 p-3 bg-pink-50 border border-pink-100 rounded-2xl">
           <p className="text-sm font-medium text-gray-700 mb-1">Special Requirements:</p>
           <p className="text-sm text-gray-600">{booking.special_requirements}</p>
         </div>

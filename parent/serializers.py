@@ -1,5 +1,11 @@
 from rest_framework import serializers
-from .models import ParentProfile, ChildProfile, BabysitterRequest, BabysitterReview, BabysitterAvailability
+from .models import (
+    ParentProfile,
+    ChildProfile,
+    BabysitterRequest,
+    BabysitterReview,
+    BabysitterAvailability,
+)
 from account.models import User, UserProfile
 
 
@@ -14,11 +20,11 @@ class UserSerializer(serializers.ModelSerializer):
 
 class BabysitterListSerializer(serializers.ModelSerializer):
     """Serializer for babysitter listings"""
-    
+
     profile = serializers.SerializerMethodField()
     average_rating = serializers.SerializerMethodField()
     total_reviews = serializers.SerializerMethodField()
-    
+
     class Meta:
         model = User
         fields = [
@@ -32,19 +38,25 @@ class BabysitterListSerializer(serializers.ModelSerializer):
             "total_reviews",
         ]
         read_only_fields = fields
-    
+
     def get_profile(self, obj):
         """Get user profile information"""
         try:
             profile = obj.profile
+            request = self.context.get("request")
+            profile_picture = (
+                request.build_absolute_uri(profile.profile_picture.url)
+                if request and profile.profile_picture
+                else (profile.profile_picture.url if profile.profile_picture else None)
+            )
             return {
-                "profile_picture": profile.profile_picture.url if profile.profile_picture else None,
+                "profile_picture": profile_picture,
                 "bio": profile.bio,
                 "address": profile.address,
             }
         except UserProfile.DoesNotExist:
             return None
-    
+
     def get_average_rating(self, obj):
         """Calculate average rating from reviews"""
         reviews = obj.reviews_received.all()
@@ -52,7 +64,7 @@ class BabysitterListSerializer(serializers.ModelSerializer):
             total = sum(r.rating for r in reviews)
             return round(total / reviews.count(), 2)
         return 0
-    
+
     def get_total_reviews(self, obj):
         """Get total number of reviews"""
         return obj.reviews_received.count()
@@ -60,12 +72,12 @@ class BabysitterListSerializer(serializers.ModelSerializer):
 
 class BabysitterDetailSerializer(serializers.ModelSerializer):
     """Detailed serializer for babysitter profile"""
-    
+
     profile = serializers.SerializerMethodField()
     average_rating = serializers.SerializerMethodField()
     total_reviews = serializers.SerializerMethodField()
     reviews = serializers.SerializerMethodField()
-    
+
     class Meta:
         model = User
         fields = [
@@ -80,19 +92,25 @@ class BabysitterDetailSerializer(serializers.ModelSerializer):
             "reviews",
         ]
         read_only_fields = fields
-    
+
     def get_profile(self, obj):
         """Get user profile information"""
         try:
             profile = obj.profile
+            request = self.context.get("request")
+            profile_picture = (
+                request.build_absolute_uri(profile.profile_picture.url)
+                if request and profile.profile_picture
+                else (profile.profile_picture.url if profile.profile_picture else None)
+            )
             return {
-                "profile_picture": profile.profile_picture.url if profile.profile_picture else None,
+                "profile_picture": profile_picture,
                 "bio": profile.bio,
                 "address": profile.address,
             }
         except UserProfile.DoesNotExist:
             return None
-    
+
     def get_average_rating(self, obj):
         """Calculate average rating from reviews"""
         reviews = obj.reviews_received.all()
@@ -100,26 +118,30 @@ class BabysitterDetailSerializer(serializers.ModelSerializer):
             total = sum(r.rating for r in reviews)
             return round(total / reviews.count(), 2)
         return 0
-    
+
     def get_total_reviews(self, obj):
         """Get total number of reviews"""
         return obj.reviews_received.count()
-    
+
     def get_reviews(self, obj):
         """Get recent reviews (limit 10)"""
         reviews = obj.reviews_received.all()[:10]
-        return [{
-            "rating": r.rating,
-            "comment": r.comment,
-            "parent_name": f"{r.parent.user.first_name} {r.parent.user.last_name}",
-            "created_at": r.created_at,
-        } for r in reviews]
+        return [
+            {
+                "rating": r.rating,
+                "comment": r.comment,
+                "parent_name": f"{r.parent.user.first_name} {r.parent.user.last_name}",
+                "created_at": r.created_at,
+            }
+            for r in reviews
+        ]
 
 
 class ParentProfileSerializer(serializers.ModelSerializer):
     """Serializer for parent profile management"""
 
     user = UserSerializer(read_only=True)
+    profile_picture = serializers.ImageField(required=False, allow_null=True)
 
     class Meta:
         model = ParentProfile
@@ -147,6 +169,15 @@ class ParentProfileSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        profile_picture = data.get("profile_picture")
+        if profile_picture:
+            request = self.context.get("request")
+            if request and not profile_picture.startswith("http"):
+                data["profile_picture"] = request.build_absolute_uri(profile_picture)
+        return data
 
 
 class ChildProfileSerializer(serializers.ModelSerializer):
@@ -237,12 +268,12 @@ class BabysitterRequestSerializer(serializers.ModelSerializer):
         start_date = data.get("start_date")
         end_date = data.get("end_date")
         babysitter = data.get("babysitter")
-        
+
         # Basic date validation
         if start_date and end_date:
             if start_date >= end_date:
                 raise serializers.ValidationError("Start date must be before end date.")
-        
+
         # Ensure hourly_rate has a default value
         if not data.get("hourly_rate"):
             data["hourly_rate"] = 15.00
@@ -264,21 +295,29 @@ class BabysitterRequestSerializer(serializers.ModelSerializer):
 
         # Find matching availability slots
         availability_slots = BabysitterAvailability.objects.filter(
-            babysitter=babysitter,
-            day_of_week=day_of_week
+            babysitter=babysitter, day_of_week=day_of_week
         )
 
         # Check if any availability slot covers the entire booking time
         is_available = False
         for slot in availability_slots:
-            if (booking_start_time >= slot.start_time and 
-                booking_end_time <= slot.end_time):
+            if (
+                booking_start_time >= slot.start_time
+                and booking_end_time <= slot.end_time
+            ):
                 is_available = True
                 break
 
         if not is_available:
-            day_name = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 
-                       'Friday', 'Saturday', 'Sunday'][day_of_week]
+            day_name = [
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday",
+                "Saturday",
+                "Sunday",
+            ][day_of_week]
             raise serializers.ValidationError(
                 f"Babysitter is not available on {day_name} "
                 f"from {booking_start_time.strftime('%H:%M')} to {booking_end_time.strftime('%H:%M')}."
@@ -287,8 +326,7 @@ class BabysitterRequestSerializer(serializers.ModelSerializer):
         # Check for booking conflicts with existing accepted/completed bookings
         # Only check against ACCEPTED and COMPLETED bookings (not PENDING)
         conflicting_bookings = BabysitterRequest.objects.filter(
-            babysitter=babysitter,
-            status__in=['ACCEPTED', 'COMPLETED']
+            babysitter=babysitter, status__in=["ACCEPTED", "COMPLETED"]
         ).exclude(
             # Exclude current instance if updating
             id=self.instance.id if self.instance else None
@@ -297,32 +335,36 @@ class BabysitterRequestSerializer(serializers.ModelSerializer):
         for booking in conflicting_bookings:
             # Check if the new booking overlaps with existing ones
             # Overlap logic: existing_start < new_end AND existing_end > new_start
-            if (start_date < booking.end_date and end_date > booking.start_date):
+            if start_date < booking.end_date and end_date > booking.start_date:
                 raise serializers.ValidationError(
                     f"Babysitter already has a booking during this time "
                     f"({booking.start_date.strftime('%Y-%m-%d %H:%M')} to "
                     f"{booking.end_date.strftime('%Y-%m-%d %H:%M')}). "
                     f"Please choose a different time."
                 )
-        
+
         return data
 
     def create(self, validated_data):
         """Create request and calculate total cost"""
         from decimal import Decimal
-        
+
         request_obj = BabysitterRequest.objects.create(**validated_data)
-        
+
         # Calculate total cost safely
         try:
-            duration = (request_obj.end_date - request_obj.start_date).total_seconds() / 3600
-            request_obj.total_cost = Decimal(str(request_obj.hourly_rate)) * Decimal(str(duration))
+            duration = (
+                request_obj.end_date - request_obj.start_date
+            ).total_seconds() / 3600
+            request_obj.total_cost = Decimal(str(request_obj.hourly_rate)) * Decimal(
+                str(duration)
+            )
             request_obj.save()
         except Exception:
             # If calculation fails, set a default
             request_obj.total_cost = request_obj.hourly_rate
             request_obj.save()
-        
+
         return request_obj
 
 
@@ -422,9 +464,11 @@ class BookingHistorySerializer(serializers.ModelSerializer):
 
 class BabysitterAvailabilitySerializer(serializers.ModelSerializer):
     """Serializer for babysitter availability management"""
-    
-    day_of_week_display = serializers.CharField(source="get_day_of_week_display", read_only=True)
-    
+
+    day_of_week_display = serializers.CharField(
+        source="get_day_of_week_display", read_only=True
+    )
+
     class Meta:
         model = BabysitterAvailability
         fields = [
@@ -434,48 +478,49 @@ class BabysitterAvailabilitySerializer(serializers.ModelSerializer):
             "day_of_week_display",
             "start_time",
             "end_time",
-            "created_at"
+            "created_at",
         ]
         read_only_fields = ["id", "babysitter", "created_at", "day_of_week_display"]
-    
+
     def validate(self, attrs):
         """Validate availability data"""
-        start_time = attrs.get('start_time')
-        end_time = attrs.get('end_time')
-        day_of_week = attrs.get('day_of_week')
-        
+        start_time = attrs.get("start_time")
+        end_time = attrs.get("end_time")
+        day_of_week = attrs.get("day_of_week")
+
         # Basic time validation
         if start_time and end_time and start_time >= end_time:
             raise serializers.ValidationError(
                 {"end_time": "End time must be after start time"}
             )
-        
+
         # Check for overlapping slots
-        babysitter = self.context['request'].user
-        
+        babysitter = self.context["request"].user
+
         # Build queryset for overlap check
         queryset = BabysitterAvailability.objects.filter(
-            babysitter=babysitter,
-            day_of_week=day_of_week
+            babysitter=babysitter, day_of_week=day_of_week
         )
-        
+
         # If updating, exclude current instance
         if self.instance:
             queryset = queryset.exclude(pk=self.instance.pk)
-        
+
         # Check for overlaps
         for slot in queryset:
             if start_time < slot.end_time and end_time > slot.start_time:
-                raise serializers.ValidationError({
-                    "non_field_errors": [
-                        f"This time slot overlaps with existing availability: "
-                        f"{slot.start_time.strftime('%H:%M')}-{slot.end_time.strftime('%H:%M')}"
-                    ]
-                })
-        
+                raise serializers.ValidationError(
+                    {
+                        "non_field_errors": [
+                            f"This time slot overlaps with existing availability: "
+                            f"{slot.start_time.strftime('%H:%M')}-{slot.end_time.strftime('%H:%M')}"
+                        ]
+                    }
+                )
+
         return attrs
-    
+
     def create(self, validated_data):
         """Create availability slot for current user"""
-        validated_data['babysitter'] = self.context['request'].user
+        validated_data["babysitter"] = self.context["request"].user
         return super().create(validated_data)

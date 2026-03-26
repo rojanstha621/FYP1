@@ -26,23 +26,23 @@ export default function Requests() {
 
   const statusBadge = (status) => {
     const colors = {
-      PENDING: 'bg-yellow-100 text-yellow-800',
-      ACCEPTED: 'bg-green-100 text-green-800',
-      REJECTED: 'bg-red-100 text-red-800',
-      CANCELLED: 'bg-gray-100 text-gray-800',
-      COMPLETED: 'bg-blue-100 text-blue-800',
+      PENDING: 'status-pending',
+      ACCEPTED: 'status-accepted',
+      REJECTED: 'status-rejected',
+      CANCELLED: 'status-cancelled',
+      COMPLETED: 'status-completed',
     }
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${colors[status] || 'bg-gray-100'}`}>
+      <span className={colors[status] || 'status-badge bg-pink-50 text-pink-700'}>
         {status}
       </span>
     )
   }
 
   return (
-    <div className="mt-8 max-w-4xl mx-auto px-4">
+    <div className="page-wrap max-w-6xl mx-auto px-4">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold">My Requests</h2>
+        <h2 className="text-2xl font-bold tracking-tight">My Requests</h2>
         <button 
           className="btn-primary" 
           onClick={() => setShowCreateForm(!showCreateForm)}
@@ -60,15 +60,15 @@ export default function Requests() {
       {showCreateForm && <CreateRequestForm onClose={() => setShowCreateForm(false)} />}
 
       {/* Filter buttons */}
-      <div className="flex gap-2 mb-4 overflow-x-auto">
+      <div className="flex gap-2 mb-5 overflow-x-auto">
         {['ALL', 'PENDING', 'ACCEPTED', 'REJECTED', 'CANCELLED', 'COMPLETED'].map(status => (
           <button
             key={status}
             onClick={() => setStatusFilter(status)}
-            className={`px-3 py-1 rounded text-sm whitespace-nowrap ${
+            className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-all duration-200 ${
               statusFilter === status 
-                ? 'bg-primary text-white' 
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                ? 'bg-[#FF6B9D] text-white' 
+                : 'bg-white border border-pink-100 text-pink-700 hover:bg-pink-50'
             }`}
           >
             {status}
@@ -84,9 +84,9 @@ export default function Requests() {
         </div>
       )}
 
-      <div className="grid gap-3">
+      <div className="grid gap-4">
         {filteredRequests.map((r) => (
-          <div key={r.id} className="bg-white shadow rounded-lg p-4">
+          <div key={r.id} className="card">
             <div className="flex justify-between items-start mb-2">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
@@ -98,7 +98,7 @@ export default function Requests() {
                     Babysitter: {r.babysitter_info.first_name} {r.babysitter_info.last_name}
                   </div>
                 )}
-                <div className="text-sm text-textSecondary mt-1">
+                <div className="text-sm text-gray-500 mt-1">
                   {new Date(r.start_date).toLocaleString()} — {new Date(r.end_date).toLocaleString()}
                 </div>
                 {r.total_cost && (
@@ -194,8 +194,11 @@ function CreateRequestForm({ onClose }) {
   }
 
   return (
-    <div className="bg-white shadow rounded-lg p-4 mb-6">
-      <h3 className="font-semibold mb-3">Create New Request</h3>
+    <div className="card mb-6">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="font-semibold">Create New Request</h3>
+        <div className="text-xs text-gray-500">1. Pick Time → 2. Confirm → 3. Done</div>
+      </div>
       
       {message && (
         <Alert type={message.includes('Failed') ? 'error' : 'success'} className="mb-3">

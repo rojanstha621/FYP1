@@ -60,6 +60,8 @@ class UserBasicSerializer(serializers.ModelSerializer):
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
+    profile_picture = serializers.ImageField(required=False, allow_null=True)
+
     class Meta:
         model = UserProfile
         fields = [
@@ -70,6 +72,15 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = ["created_at", "updated_at"]
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        profile_picture = data.get("profile_picture")
+        if profile_picture:
+            request = self.context.get("request")
+            if request and not profile_picture.startswith("http"):
+                data["profile_picture"] = request.build_absolute_uri(profile_picture)
+        return data
 
 
 class MeSerializer(serializers.Serializer):
@@ -116,6 +127,7 @@ class ChangePasswordSerializer(serializers.Serializer):
         user.save(update_fields=["password"])
         return {}
 
+
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(
         write_only=True,
@@ -143,7 +155,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             last_name=validated_data.get("last_name"),
             phone_number=validated_data.get("phone_number"),
             role=validated_data["role"],
-            is_active=True,          # later you can set False until email verified
+            is_active=True,  # later you can set False until email verified
         )
 
         user.set_password(password)
@@ -156,6 +168,8 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 
 class AdminUserProfileSerializer(serializers.ModelSerializer):
+    profile_picture = serializers.SerializerMethodField()
+
     class Meta:
         model = UserProfile
         fields = [
@@ -166,6 +180,13 @@ class AdminUserProfileSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = ["created_at", "updated_at"]
+
+    def get_profile_picture(self, obj):
+        if not obj.profile_picture:
+            return None
+        request = self.context.get("request")
+        url = obj.profile_picture.url
+        return request.build_absolute_uri(url) if request else url
 
 
 class AdminUserListSerializer(serializers.ModelSerializer):
@@ -208,7 +229,11 @@ class AdminUserDetailSerializer(serializers.ModelSerializer):
         profile = getattr(obj, "profile", None)
         if not profile:
             profile = UserProfile.objects.filter(user=obj).first()
-        return AdminUserProfileSerializer(profile).data if profile else None
+        return (
+            AdminUserProfileSerializer(profile, context=self.context).data
+            if profile
+            else None
+        )
 
 
 class AdminUserUpdateSerializer(serializers.ModelSerializer):

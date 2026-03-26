@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useMe } from '../api/hooks'
 import { login as loginApi, logout as logoutApi, register as registerApi, me as fetchMe } from '../api/account'
 import api from '../api/axios'
+import { setPendingToast } from '../components/toastStore'
 
 const AuthContext = createContext()
 
@@ -41,6 +42,7 @@ export const AuthProvider = ({ children }) => {
     } catch (e) {
       // ignore fetch errors here; app will show login state
     }
+    setPendingToast({ type: 'success', message: 'Login successful. Welcome back!' })
     navigate('/dashboard')
   }
 

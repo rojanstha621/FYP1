@@ -14,6 +14,7 @@ export default function BabysitterDetail() {
   const createRequest = useCreateRequest()
   const [message, setMessage] = useState('')
   const [showRequestForm, setShowRequestForm] = useState(false)
+  const [activeTab, setActiveTab] = useState('ABOUT')
   const [selectedDate, setSelectedDate] = useState('')
   
   // Get existing bookings for the selected date
@@ -144,20 +145,18 @@ export default function BabysitterDetail() {
   }
 
   return (
-    <div className="mt-8 max-w-4xl mx-auto px-4">
-      <div className="flex justify-between items-center mb-4">
-        <Link to="/babysitters" className="text-primary hover:underline">
+    <div className="page-wrap max-w-6xl mx-auto px-4">
+      <div className="flex justify-between items-center mb-5">
+        <Link to="/babysitters" className="text-pink-600 hover:text-pink-700 transition-all duration-200">
           ← Back to Babysitters
         </Link>
         <button 
-          className="btn-primary" 
+          className="btn-primary"
           onClick={() => setShowRequestForm(!showRequestForm)}
         >
-          {showRequestForm ? 'Cancel' : 'Send Request'}
+          {showRequestForm ? 'Close Form' : 'Book Now'}
         </button>
       </div>
-
-      <h2 className="text-2xl font-semibold mb-4">Babysitter Profile</h2>
 
       {message && (
         <Alert type={message.includes('Failed') ? 'error' : 'success'} className="mb-4">
@@ -165,8 +164,47 @@ export default function BabysitterDetail() {
         </Alert>
       )}
 
+      <div className="card mb-6">
+        <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+          <div className="w-28 h-28 rounded-full overflow-hidden border-2 border-pink-100 flex-shrink-0">
+            {babysitter.profile?.profile_picture ? (
+              <img
+                src={babysitter.profile.profile_picture}
+                alt={`${babysitter.first_name} ${babysitter.last_name}`}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-pink-50 text-pink-500 text-3xl font-semibold">
+                {babysitter.first_name[0]}{babysitter.last_name[0]}
+              </div>
+            )}
+          </div>
+
+          <div className="flex-1">
+            <h2 className="text-2xl font-bold tracking-tight">{babysitter.first_name} {babysitter.last_name}</h2>
+            <p className="text-gray-500 text-sm mt-1">{babysitter.email}</p>
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-1 text-amber-500">
+                <StarRating rating={Math.round(babysitter.average_rating || 0)} />
+                <span className="text-[#1A1A2E] text-sm font-semibold">{parseFloat(babysitter.average_rating || 0).toFixed(1)}</span>
+                <span className="text-xs text-gray-500">({babysitter.total_reviews || 0} reviews)</span>
+              </div>
+              <span className="inline-flex rounded-full bg-pink-100 text-pink-700 px-3 py-1 text-xs font-semibold">
+                ${Number.parseFloat(babysitter.hourly_rate || 15).toFixed(2)}/hr
+              </span>
+            </div>
+          </div>
+
+          <button className="btn-primary" onClick={() => setShowRequestForm(true)}>Book Now</button>
+        </div>
+      </div>
+
       {showRequestForm && (
-        <div className="bg-white shadow rounded-lg p-4 mb-6">
+        <div className="card mb-6">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-semibold">Step 1: Pick Time</h3>
+            <div className="text-xs text-gray-500">1. Pick Time → 2. Confirm → 3. Done</div>
+          </div>
           <h3 className="font-semibold mb-3">Send Request to {babysitter.first_name}</h3>
           <form onSubmit={handleRequest} className="grid gap-3">
             <div>
@@ -198,16 +236,16 @@ export default function BabysitterDetail() {
             
             {/* Show existing bookings for selected date */}
             {selectedDate && existingBookings && existingBookings.length > 0 && (
-              <div className="p-3 bg-yellow-50 border border-yellow-200 rounded">
-                <h4 className="font-medium text-yellow-800 mb-2">Existing Bookings on {selectedDate}:</h4>
+              <div className="p-3 bg-amber-50 border border-amber-200 rounded-2xl">
+                <h4 className="font-medium text-amber-700 mb-2">Existing Bookings on {selectedDate}:</h4>
                 <div className="space-y-1">
                   {existingBookings.map((booking) => (
-                    <div key={booking.id} className="text-sm text-yellow-700">
+                    <div key={booking.id} className="text-sm text-amber-700">
                       {booking.start_time} - {booking.end_time} ({booking.status})
                     </div>
                   ))}
                 </div>
-                <p className="text-xs text-yellow-600 mt-2">
+                <p className="text-xs text-amber-600 mt-2">
                   Please choose a time that doesn't overlap with these bookings.
                 </p>
               </div>
@@ -248,133 +286,83 @@ export default function BabysitterDetail() {
         </div>
       )}
 
-      <div className="bg-white shadow rounded-lg p-6">
-        <div className="flex items-start gap-6 mb-6">
-          {/* Profile Picture */}
-          <div className="w-32 h-32 rounded-full overflow-hidden border-2 border-gray-200 flex-shrink-0">
-            {babysitter.profile?.profile_picture ? (
-              <img 
-                src={babysitter.profile.profile_picture} 
-                alt={`${babysitter.first_name} ${babysitter.last_name}`}
-                className="w-full h-full object-cover" 
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400 text-3xl">
-                {babysitter.first_name[0]}{babysitter.last_name[0]}
-              </div>
-            )}
-          </div>
-
-          {/* Basic Info */}
-          <div className="flex-1">
-            <h3 className="text-2xl font-semibold">
-              {babysitter.first_name} {babysitter.last_name}
-            </h3>
-            <p className="text-textSecondary">{babysitter.email}</p>
-            {babysitter.phone_number && (
-              <p className="text-textSecondary">{babysitter.phone_number}</p>
-            )}
-            
-            {/* Rating */}
-            <div className="mt-3 flex items-center gap-4">
-              {babysitter.average_rating > 0 ? (
-                <>
-                  <div className="flex items-center gap-1">
-                    <StarRating rating={Math.round(babysitter.average_rating)} />
-                    <span className="text-sm font-medium">
-                      {parseFloat(babysitter.average_rating).toFixed(1)}
-                    </span>
-                  </div>
-                  <span className="text-sm text-textSecondary">
-                    ({babysitter.total_reviews} reviews)
-                  </span>
-                </>
-              ) : (
-                <span className="text-sm text-textSecondary">No ratings yet</span>
-              )}
-            </div>
-          </div>
+      <div className="card">
+        <div className="flex flex-wrap gap-2 mb-5 border-b border-pink-100 pb-4">
+          {[
+            { key: 'ABOUT', label: 'About' },
+            { key: 'AVAILABILITY', label: 'Availability' },
+            { key: 'REVIEWS', label: 'Reviews' },
+          ].map((tab) => (
+            <button
+              key={tab.key}
+              type="button"
+              onClick={() => setActiveTab(tab.key)}
+              className={`rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 ${
+                activeTab === tab.key
+                  ? 'bg-[#FF6B9D] text-white'
+                  : 'bg-pink-50 text-pink-700 border border-pink-100'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
 
-        {/* Bio */}
-        {babysitter.profile?.bio && (
-          <div className="mb-6">
-            <h4 className="font-semibold mb-2">About</h4>
-            <p className="text-gray-700">{babysitter.profile.bio}</p>
+        {activeTab === 'ABOUT' && (
+          <div className="space-y-4">
+            <div>
+              <h4 className="font-semibold mb-2">About</h4>
+              <p className="text-gray-700">{babysitter.profile?.bio || 'No bio provided yet.'}</p>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-2">Location</h4>
+              <p className="text-gray-700">📍 {babysitter.profile?.address || 'Location unavailable'}</p>
+            </div>
           </div>
         )}
 
-        {/* Location */}
-        {babysitter.profile?.address && (
-          <div className="mb-6">
-            <h4 className="font-semibold mb-2">Location</h4>
-            <p className="text-gray-700">📍 {babysitter.profile.address}</p>
-          </div>
-        )}
-
-        {/* Availability */}
-        <div className="mb-6">
-          <h4 className="font-semibold mb-3">Availability</h4>
-          {availability && availability.length > 0 ? (
-            <div className="grid gap-3">
-              {dayNames.map((dayName, dayIndex) => {
-                const daySlots = availability.filter(slot => slot.day_of_week === dayIndex)
-                if (daySlots.length === 0) return null
-
-                return (
-                  <div key={dayIndex} className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
-                    <div className="w-20 text-sm font-medium text-gray-700">
-                      {dayName}
-                    </div>
+        {activeTab === 'AVAILABILITY' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {dayNames.map((dayName, dayIndex) => {
+              const daySlots = availability?.filter((slot) => slot.day_of_week === dayIndex) || []
+              return (
+                <div key={dayIndex} className="rounded-2xl border border-pink-100 p-4 bg-pink-50/40">
+                  <h5 className="font-semibold mb-2">{dayName}</h5>
+                  {daySlots.length ? (
                     <div className="flex flex-wrap gap-2">
-                      {daySlots.map((slot, index) => (
-                        <span 
-                          key={index}
-                          className="px-2 py-1 bg-green-100 text-green-800 text-sm rounded"
-                        >
+                      {daySlots.map((slot) => (
+                        <span key={slot.id} className="rounded-full bg-emerald-100 text-emerald-700 px-3 py-1 text-xs font-semibold">
                           {slot.start_time} - {slot.end_time}
                         </span>
                       ))}
                     </div>
-                  </div>
-                )
-              })}
-            </div>
-          ) : (
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <p className="text-gray-500 text-sm">No availability information provided</p>
-            </div>
-          )}
-        </div>
-
-        {/* Reviews Section */}
-        {babysitter.reviews && babysitter.reviews.length > 0 && (
-          <div className="mt-6 border-t pt-6">
-            <h4 className="font-semibold mb-4">Reviews ({babysitter.reviews.length})</h4>
-            <div className="grid gap-4">
-              {babysitter.reviews.map((review, idx) => (
-                <div key={idx} className="bg-gray-50 p-4 rounded">
-                  <div className="flex items-center gap-2 mb-2">
-                    <StarRating rating={review.rating} />
-                    <span className="text-sm text-textSecondary">
-                      {new Date(review.created_at).toLocaleDateString()}
-                    </span>
-                  </div>
-                  {review.comment && (
-                    <p className="text-sm text-gray-700">{review.comment}</p>
-                  )}
-                  {review.parent_name && (
-                    <p className="text-xs text-textSecondary mt-2">
-                      — {review.parent_name}
-                    </p>
+                  ) : (
+                    <p className="text-xs text-gray-500">Not available</p>
                   )}
                 </div>
-              ))}
-            </div>
+              )
+            })}
           </div>
         )}
 
-        {/* Member Since - removed since created_at may not be in response */}
+        {activeTab === 'REVIEWS' && (
+          <div className="grid gap-4">
+            {babysitter.reviews?.length ? babysitter.reviews.map((review, idx) => (
+              <div key={idx} className="rounded-2xl border border-pink-100 bg-white p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <StarRating rating={review.rating} />
+                    <span className="text-sm text-gray-500">{new Date(review.created_at).toLocaleDateString()}</span>
+                  </div>
+                  <span className="text-xs text-gray-500">{review.parent_name || 'Parent'}</span>
+                </div>
+                {review.comment && <p className="text-sm text-gray-700 mt-2">{review.comment}</p>}
+              </div>
+            )) : (
+              <p className="text-sm text-gray-500">No reviews yet.</p>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )
