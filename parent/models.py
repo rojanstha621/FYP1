@@ -264,3 +264,36 @@ class BabysitterAvailability(models.Model):
     def save(self, *args, **kwargs):
         self.clean()
         super().save(*args, **kwargs)
+
+
+class BabysitterStory(models.Model):
+    """Stories posted by babysitters during active babysitting sessions"""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    booking = models.ForeignKey(
+        BabysitterRequest,
+        on_delete=models.CASCADE,
+        related_name="stories",
+    )
+    babysitter = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        limit_choices_to={"role": "BABYSITTER"},
+        related_name="stories_posted",
+    )
+    content = models.TextField(help_text=_("Story update from babysitter"))
+    image = models.ImageField(
+        upload_to="stories/",
+        blank=True,
+        null=True,
+        help_text=_("Optional image for the story"),
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = _("Babysitter Story")
+        verbose_name_plural = _("Babysitter Stories")
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"Story by {self.babysitter.email} for Booking {self.booking.id}"

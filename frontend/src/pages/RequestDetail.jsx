@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useRequestDetail, useUpdateRequest, useDeleteRequest, useCancelRequest } from '../api/hooks'
 import Alert from '../components/Alert'
+import { formatDateTime, toNepalInputValue } from '../utils/date'
 
 export default function RequestDetail() {
   const { id } = useParams()
@@ -136,7 +137,7 @@ export default function RequestDetail() {
                 type="datetime-local" 
                 name="start_date" 
                 className="form-input" 
-                defaultValue={request.start_date?.slice(0, 16)}
+                defaultValue={toNepalInputValue(request.start_date)}
                 required 
               />
             </div>
@@ -146,7 +147,7 @@ export default function RequestDetail() {
                 type="datetime-local" 
                 name="end_date" 
                 className="form-input" 
-                defaultValue={request.end_date?.slice(0, 16)}
+                defaultValue={toNepalInputValue(request.end_date)}
                 required 
               />
             </div>
@@ -240,8 +241,8 @@ export default function RequestDetail() {
             <div>
               <label className="text-sm font-medium text-textSecondary">Schedule</label>
               <div className="mt-1 text-base">
-                <div><span className="font-medium">Start:</span> {new Date(request.start_date).toLocaleString()}</div>
-                <div><span className="font-medium">End:</span> {new Date(request.end_date).toLocaleString()}</div>
+                <div><span className="font-medium">Start:</span> {formatDateTime(request.start_date)}</div>
+                <div><span className="font-medium">End:</span> {formatDateTime(request.end_date)}</div>
               </div>
             </div>
 
@@ -294,8 +295,8 @@ export default function RequestDetail() {
 
             {/* Timestamps */}
             <div className="text-xs text-textSecondary border-t pt-4">
-              <div>Created: {new Date(request.created_at).toLocaleString()}</div>
-              <div>Last Updated: {new Date(request.updated_at).toLocaleString()}</div>
+              <div>Created: {formatDateTime(request.created_at)}</div>
+              <div>Last Updated: {formatDateTime(request.updated_at)}</div>
             </div>
           </div>
         </div>

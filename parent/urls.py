@@ -12,6 +12,8 @@ from .views import (
     BabysitterReviewsReceivedViewSet,
     BabysitterHistoryViewSet,
     BabysitterAvailabilityViewSet,
+    BabysitterStoryViewSet,
+    ParentStoriesViewSet,
 )
 
 # Parent routes
@@ -22,6 +24,7 @@ parent_router.register(r"requests", BabysitterRequestViewSet, basename="babysitt
 parent_router.register(r"listings", BabysitterListingView, basename="babysitter-listing")
 parent_router.register(r"reviews", BabysitterReviewViewSet, basename="babysitter-review")
 parent_router.register(r"history", BookingHistoryViewSet, basename="booking-history")
+parent_router.register(r"stories", ParentStoriesViewSet, basename="parent-stories")
 
 # Babysitter routes
 babysitter_router = DefaultRouter()
@@ -30,6 +33,7 @@ babysitter_router.register(r"bookings", BabysitterBookingsViewSet, basename="bab
 babysitter_router.register(r"reviews", BabysitterReviewsReceivedViewSet, basename="babysitter-reviews-received")
 babysitter_router.register(r"history", BabysitterHistoryViewSet, basename="babysitter-history")
 babysitter_router.register(r"availability", BabysitterAvailabilityViewSet, basename="babysitter-availability")
+babysitter_router.register(r"stories", BabysitterStoryViewSet, basename="babysitter-stories")
 
 urlpatterns = [
     path("", include(parent_router.urls)),

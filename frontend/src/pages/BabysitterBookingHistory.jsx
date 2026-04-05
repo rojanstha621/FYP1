@@ -1,5 +1,6 @@
 import React from 'react'
 import { useBabysitterHistory } from '../api/hooks'
+import { formatDate, formatTime } from '../utils/date'
 
 export default function BabysitterBookingHistory() {
   const { data: history, isLoading } = useBabysitterHistory()
@@ -59,10 +60,8 @@ export default function BabysitterBookingHistory() {
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-900">{booking.child_name || 'N/A'}</td>
                   <td className="px-4 py-3">
-                    <div className="text-sm text-gray-900">{new Date(booking.start_date).toLocaleDateString()}</div>
-                    <div className="text-xs text-gray-500">
-                      {new Date(booking.start_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </div>
+                    <div className="text-sm text-gray-900">{formatDate(booking.start_date)}</div>
+                    <div className="text-xs text-gray-500">{formatTime(booking.start_date)}</div>
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-900">{booking.duration_hours} hrs</td>
                   <td className="px-4 py-3 text-sm text-gray-900">${booking.hourly_rate}/hr</td>

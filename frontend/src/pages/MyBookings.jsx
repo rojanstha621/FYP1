@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useMyBookings, useCompleteBooking } from '../api/hooks'
 import Alert from '../components/Alert'
+import { formatDateTime } from '../utils/date'
 
 export default function MyBookings() {
   const { data: bookings, isLoading } = useMyBookings()
@@ -154,13 +155,13 @@ function BookingCard({ booking, onComplete, status, showCompleteButton }) {
         <div>
           <span className="font-medium text-gray-700">Start:</span>
           <span className="ml-2 text-gray-600">
-            {new Date(booking.start_date).toLocaleString()}
+            {formatDateTime(booking.start_date)}
           </span>
         </div>
         <div>
           <span className="font-medium text-gray-700">End:</span>
           <span className="ml-2 text-gray-600">
-            {new Date(booking.end_date).toLocaleString()}
+            {formatDateTime(booking.end_date)}
           </span>
         </div>
         <div>

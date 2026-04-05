@@ -4,7 +4,8 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from django.utils import timezone
-from .models import ParentProfile, ChildProfile, BabysitterRequest, BabysitterReview, BabysitterAvailability
+from django.db.models import F
+from .models import ParentProfile, ChildProfile, BabysitterRequest, BabysitterReview, BabysitterAvailability, BabysitterStory
 from .serializers import (
     ParentProfileSerializer,
     ChildProfileSerializer,
@@ -16,6 +17,7 @@ from .serializers import (
     BabysitterListSerializer,
     BabysitterDetailSerializer,
     BabysitterAvailabilitySerializer,
+    BabysitterStorySerializer,
 )
 from account.models import User
 from account.permissions import IsParent, IsBabysitter
@@ -552,3 +554,80 @@ class BabysitterAvailabilityViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         """Create availability slot for current babysitter"""
         serializer.save(babysitter=self.request.user)
+
+
+# ============================================
+# STORY VIEWSETS
+# ============================================
+
+
+class BabysitterStoryViewSet(viewsets.ModelViewSet):
+    """
+    Babysitter can POST stories only during an active (ongoing) ACCEPTED booking.
+    Babysitter can also GET/DELETE their own stories.
+    """
+
+    serializer_class = BabysitterStorySerializer
+    permission_classes = [IsAuthenticated, IsBabysitter]
+    http_method_names = ["get", "post", "delete"]
+
+    def get_queryset(self):
+        return BabysitterStory.objects.filter(babysitter=self.request.user)
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context["request"] = self.request
+        return context
+
+    def perform_create(self, serializer):
+        serializer.save(babysitter=self.request.user)
+
+    @action(detail=False, methods=["get"])
+    def active_bookings(self, request):
+        """Return babysitter's currently ongoing ACCEPTED bookings (for story posting UI)"""
+        now = timezone.now()
+        bookings = BabysitterRequest.objects.filter(
+            babysitter=request.user,
+            status="ACCEPTED",
+            start_date__lte=now,
+            end_date__gte=now,
+        )
+        serializer = BabysitterRequestSerializer(bookings, many=True)
+        return Response(serializer.data)
+
+
+class ParentStoriesViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Parents can GET stories from their hired babysitters.
+    Only stories created within the booking's start_date–end_date window are returned.
+    Optionally filter by ?booking_id=<uuid>.
+    """
+
+    serializer_class = BabysitterStorySerializer
+    permission_classes = [IsAuthenticated, IsParent]
+
+    def get_queryset(self):
+        user = self.request.user
+        try:
+            parent_profile = user.parent_profile
+        except ParentProfile.DoesNotExist:
+            return BabysitterStory.objects.none()
+
+        queryset = BabysitterStory.objects.filter(
+            booking__parent=parent_profile,
+            booking__status__in=["ACCEPTED", "COMPLETED"],
+        ).filter(
+            created_at__gte=F("booking__start_date"),
+            created_at__lte=F("booking__end_date"),
+        )
+
+        booking_id = self.request.query_params.get("booking_id")
+        if booking_id:
+            queryset = queryset.filter(booking_id=booking_id)
+
+        return queryset
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context["request"] = self.request
+        return context

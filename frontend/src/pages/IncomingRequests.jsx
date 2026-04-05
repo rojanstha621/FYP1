@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useIncomingRequests, useAcceptRequest, useRejectRequest } from '../api/hooks'
 import Alert from '../components/Alert'
+import { formatDateTime } from '../utils/date'
 
 export default function IncomingRequests() {
   const { data: requests, isLoading } = useIncomingRequests()
@@ -89,11 +90,11 @@ export default function IncomingRequests() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="font-medium text-gray-700">Start:</span>
-                  <span className="ml-2 text-gray-600">{new Date(request.start_date).toLocaleString()}</span>
+                  <span className="ml-2 text-gray-600">{formatDateTime(request.start_date)}</span>
                 </div>
                 <div>
                   <span className="font-medium text-gray-700">End:</span>
-                  <span className="ml-2 text-gray-600">{new Date(request.end_date).toLocaleString()}</span>
+                  <span className="ml-2 text-gray-600">{formatDateTime(request.end_date)}</span>
                 </div>
                 <div>
                   <span className="font-medium text-gray-700">Hourly Rate:</span>

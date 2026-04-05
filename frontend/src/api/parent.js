@@ -36,3 +36,6 @@ export const getReviewDetail = (id) => api.get(`/parent/reviews/${id}/`)
 export const updateReview = (id, payload) => api.patch(`/parent/reviews/${id}/`, payload)
 export const deleteReview = (id) => api.delete(`/parent/reviews/${id}/`)
 export const bookingHistory = (params) => api.get('/parent/history/', { params })
+
+// Babysitter stories (parent view)
+export const getParentStories = (params) => api.get('/parent/stories/', { params })

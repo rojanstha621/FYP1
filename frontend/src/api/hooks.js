@@ -409,10 +409,57 @@ export function useBabysitterAvailability(babysitterId) {
 
 export function useBabysitterBookings(babysitterId, date) {
   return useQuery(
-    ['babysitterBookings', babysitterId, date], 
+    ['babysitterBookings', babysitterId, date],
     () => getBabysitterBookings(babysitterId, date).then((res) => res.data),
     {
       enabled: !!babysitterId && !!date && !!localStorage.getItem('access'),
+    }
+  )
+}
+
+// ============ Story Hooks ============
+import {
+  getBabysitterStories,
+  createBabysitterStory,
+  deleteBabysitterStory,
+  getActiveBookingsForStory,
+} from './babysitter'
+import { getParentStories } from './parent'
+
+export function useBabysitterOwnStories() {
+  return useQuery(['babysitterOwnStories'], () => getBabysitterStories().then((res) => res.data), {
+    enabled: !!localStorage.getItem('access'),
+  })
+}
+
+export function useActiveBookingsForStory() {
+  return useQuery(['activeBookingsForStory'], () => getActiveBookingsForStory().then((res) => res.data), {
+    enabled: !!localStorage.getItem('access'),
+    refetchInterval: 30000,
+  })
+}
+
+export function useCreateBabysitterStory() {
+  const qc = useQueryClient()
+  return useMutation((formData) => createBabysitterStory(formData).then((res) => res.data), {
+    onSuccess: () => qc.invalidateQueries(['babysitterOwnStories']),
+  })
+}
+
+export function useDeleteBabysitterStory() {
+  const qc = useQueryClient()
+  return useMutation((id) => deleteBabysitterStory(id), {
+    onSuccess: () => qc.invalidateQueries(['babysitterOwnStories']),
+  })
+}
+
+export function useParentStories(params) {
+  return useQuery(
+    ['parentStories', params],
+    () => getParentStories(params).then((res) => res.data),
+    {
+      enabled: !!localStorage.getItem('access'),
+      refetchInterval: 30000,
     }
   )
 }

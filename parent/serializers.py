@@ -1,10 +1,12 @@
 from rest_framework import serializers
+from django.utils import timezone
 from .models import (
     ParentProfile,
     ChildProfile,
     BabysitterRequest,
     BabysitterReview,
     BabysitterAvailability,
+    BabysitterStory,
 )
 from account.models import User, UserProfile
 
@@ -524,3 +526,65 @@ class BabysitterAvailabilitySerializer(serializers.ModelSerializer):
         """Create availability slot for current user"""
         validated_data["babysitter"] = self.context["request"].user
         return super().create(validated_data)
+
+
+class BabysitterStorySerializer(serializers.ModelSerializer):
+    """Serializer for babysitter stories - create (babysitter) and read (parent)"""
+
+    babysitter_name = serializers.SerializerMethodField()
+    booking_info = serializers.SerializerMethodField()
+
+    class Meta:
+        model = BabysitterStory
+        fields = [
+            "id",
+            "booking",
+            "babysitter_name",
+            "booking_info",
+            "content",
+            "image",
+            "created_at",
+        ]
+        read_only_fields = ["id", "babysitter_name", "booking_info", "created_at"]
+
+    def get_babysitter_name(self, obj):
+        return f"{obj.babysitter.first_name} {obj.babysitter.last_name}"
+
+    def get_booking_info(self, obj):
+        return {
+            "child_name": obj.booking.child.name if obj.booking.child else None,
+            "start_date": obj.booking.start_date,
+            "end_date": obj.booking.end_date,
+            "parent_email": obj.booking.parent.user.email if obj.booking.parent else None,
+        }
+
+    def validate_booking(self, booking):
+        """Ensure babysitter can only post during their active session"""
+        user = self.context["request"].user
+        now = timezone.now()
+
+        if booking.babysitter != user:
+            raise serializers.ValidationError("You are not the babysitter for this booking.")
+
+        if booking.status != "ACCEPTED":
+            raise serializers.ValidationError("You can only post stories for accepted bookings.")
+
+        if not (booking.start_date <= now <= booking.end_date):
+            raise serializers.ValidationError(
+                "You can only post stories during the active babysitting session."
+            )
+
+        return booking
+
+    def create(self, validated_data):
+        validated_data["babysitter"] = self.context["request"].user
+        return super().create(validated_data)
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        image = data.get("image")
+        if image:
+            request = self.context.get("request")
+            if request and not str(image).startswith("http"):
+                data["image"] = request.build_absolute_uri(image)
+        return data

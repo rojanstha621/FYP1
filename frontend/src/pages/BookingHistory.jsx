@@ -1,6 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { useBookingHistory } from '../api/hooks'
+import { formatDateTime } from '../utils/date'
 
 export default function BookingHistory() {
   const { data: history, isLoading } = useBookingHistory()
@@ -44,7 +45,7 @@ export default function BookingHistory() {
                   )}
 
                   <div className="text-sm text-textSecondary mt-1">
-                    {new Date(booking.start_date).toLocaleString()} — {new Date(booking.end_date).toLocaleString()}
+                    {formatDateTime(booking.start_date)} — {formatDateTime(booking.end_date)}
                   </div>
 
                   <div className="mt-2">

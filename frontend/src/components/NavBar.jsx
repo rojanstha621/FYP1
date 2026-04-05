@@ -23,6 +23,7 @@ export default function NavBar() {
     { to: '/babysitters', label: 'Babysitters' },
     { to: '/children', label: 'Children' },
     { to: '/requests', label: 'Requests' },
+    { to: '/stories', label: 'Stories' },
     { to: '/history', label: 'History' },
     { to: '/reviews', label: 'Reviews' },
   ]
@@ -30,6 +31,7 @@ export default function NavBar() {
   const babysitterLinks = [
     { to: '/babysitter/requests', label: 'Requests' },
     { to: '/babysitter/bookings', label: 'My Bookings' },
+    { to: '/babysitter/stories', label: 'Stories' },
     { to: '/babysitter/availability', label: 'Availability' },
     { to: '/babysitter/reviews', label: 'Reviews' },
     { to: '/babysitter/history', label: 'History' },

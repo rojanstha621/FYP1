@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useRequests, useCancelRequest, useChildren, useCreateRequest } from '../api/hooks'
 import Alert from '../components/Alert'
+import { formatDateTime } from '../utils/date'
 
 export default function Requests() {
   const { data: requests, isLoading } = useRequests()
@@ -99,7 +100,7 @@ export default function Requests() {
                   </div>
                 )}
                 <div className="text-sm text-gray-500 mt-1">
-                  {new Date(r.start_date).toLocaleString()} — {new Date(r.end_date).toLocaleString()}
+                  {formatDateTime(r.start_date)} — {formatDateTime(r.end_date)}
                 </div>
                 {r.total_cost && (
                   <div className="text-sm font-medium mt-1">

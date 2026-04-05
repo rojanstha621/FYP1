@@ -18,3 +18,11 @@ export const getReceivedReviews = () => api.get('/parent/babysitter/reviews/')
 
 // Booking History
 export const getBabysitterHistory = (params) => api.get('/parent/babysitter/history/', { params })
+
+// Stories
+export const getBabysitterStories = () => api.get('/parent/babysitter/stories/')
+export const createBabysitterStory = (formData) => api.post('/parent/babysitter/stories/', formData, {
+  headers: { 'Content-Type': 'multipart/form-data' },
+})
+export const deleteBabysitterStory = (id) => api.delete(`/parent/babysitter/stories/${id}/`)
+export const getActiveBookingsForStory = () => api.get('/parent/babysitter/stories/active_bookings/')
