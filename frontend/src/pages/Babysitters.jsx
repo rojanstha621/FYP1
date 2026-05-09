@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useBabysittersSearch, useChildren, useCreateRequest } from '../api/hooks'
 import Alert from '../components/Alert'
@@ -7,18 +7,35 @@ export default function Babysitters() {
   const [query, setQuery] = useState({ name: '', city: '', min_rating: '' })
   const [message, setMessage] = useState('')
   const [selected, setSelected] = useState(null)
+  const [visibleCount, setVisibleCount] = useState(0)
 
   const { data: results, isLoading } = useBabysittersSearch(query)
   const { data: children } = useChildren()
   const createRequest = useCreateRequest()
 
+  useEffect(() => {
+    if (results && results.length > 0) {
+      setVisibleCount(0)
+      let index = 0
+      const interval = setInterval(() => {
+        index++
+        if (index <= results.length) {
+          setVisibleCount(index)
+        } else {
+          clearInterval(interval)
+        }
+      }, 150)
+      return () => clearInterval(interval)
+    }
+  }, [results])
+
   const submitRequest = async (e) => {
     e.preventDefault()
     setMessage('')
     const form = new FormData(e.target)
-    
+
     const hourlyRate = parseFloat(form.get('hourly_rate')) || 15.00
-    
+
     try {
       await createRequest.mutateAsync({
         babysitter: selected.id,
@@ -48,7 +65,6 @@ export default function Babysitters() {
       <form
         onSubmit={(e) => {
           e.preventDefault()
-          // trigger search by changing query (useBabysittersSearch listens to `query`)
         }}
         className="mb-3"
       >
@@ -67,6 +83,22 @@ export default function Babysitters() {
 
       {isLoading && <div className="text-center text-gray-500">Searching...</div>}
 
+      <style>{`
+        @keyframes slideInUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .babysitter-card {
+          animation: slideInUp 0.4s ease-out forwards;
+        }
+      `}</style>
+
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
         {results?.length === 0 && (
           <div className="col-span-full card text-center">
@@ -76,15 +108,21 @@ export default function Babysitters() {
           </div>
         )}
 
-        {results?.map((babysitter) => (
-          <div key={babysitter.id} className="card hover:shadow-md transition-all duration-200">
+        {results?.slice(0, visibleCount).map((babysitter, index) => (
+          <div
+            key={babysitter.id}
+            className="babysitter-card card hover:shadow-md transition-all duration-200"
+            style={{
+              animationDelay: `${index * 0.15}s`,
+            }}
+          >
             <div className="flex flex-col items-center text-center">
               <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-pink-100 flex-shrink-0 mb-4">
                 {babysitter.profile?.profile_picture ? (
-                  <img 
-                    src={babysitter.profile.profile_picture} 
+                  <img
+                    src={babysitter.profile.profile_picture}
                     alt={`${babysitter.first_name} ${babysitter.last_name}`}
-                    className="w-full h-full object-cover" 
+                    className="w-full h-full object-cover"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-pink-50 text-pink-500 text-xl font-semibold">
@@ -150,11 +188,11 @@ export default function Babysitters() {
               </div>
               <div>
                 <label className="form-label">Hourly Rate</label>
-                <input 
-                  name="hourly_rate" 
-                  type="number" 
+                <input
+                  name="hourly_rate"
+                  type="number"
                   step="0.01"
-                  className="form-input" 
+                  className="form-input"
                   placeholder="15.00"
                   defaultValue="15.00"
                 />

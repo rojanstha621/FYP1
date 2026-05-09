@@ -93,7 +93,7 @@ export default function Profile() {
   if (!meData) return <div className="p-6 text-center text-gray-500">No profile data</div>
 
   return (
-    <div className="mt-8 max-w-4xl mx-auto px-4">
+    <div className="page-wrap container-main max-w-4xl">
       {message && (
         <Alert
           type={message.includes('failed') || message.includes('No') ? 'error' : 'success'}
@@ -105,12 +105,12 @@ export default function Profile() {
 
       <div className="flex flex-col md:flex-row gap-6">
         {/* Profile Card */}
-        <div className="md:w-1/3 bg-white shadow rounded-lg p-6 flex flex-col items-center text-center">
-          <div className="w-32 h-32 rounded-full overflow-hidden border-2 border-gray-200 mb-4">
+        <div className="card md:w-1/3 flex flex-col items-center text-center">
+          <div className="w-32 h-32 rounded-full overflow-hidden border-2 border-pink-100 mb-4 flex-shrink-0">
             {previewSrc ? (
               <img src={previewSrc} alt="avatar" className="w-full h-full object-cover" />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-gray-400">No image</div>
+              <div className="w-full h-full flex items-center justify-center bg-pink-50 text-gray-400 text-sm">No image</div>
             )}
           </div>
           <h2 className="text-xl font-semibold">{user.first_name} {user.last_name}</h2>
@@ -121,7 +121,7 @@ export default function Profile() {
         {/* Profile & Password Forms */}
         <div className="md:w-2/3 flex flex-col gap-6">
           {/* Profile Form */}
-          <div className="bg-white shadow rounded-lg p-6">
+          <div className="card">
             <h3 className="text-lg font-semibold mb-4">Edit Profile</h3>
             <form onSubmit={handleUpdate} className="grid grid-cols-1 gap-4">
               <div className="grid grid-cols-2 gap-4">
@@ -148,7 +148,7 @@ export default function Profile() {
               </div>
               <div>
                 <label htmlFor="profile-picture" className="form-label">Profile picture</label>
-                <input id="profile-picture" type="file" name="profile_picture" className="form-input" onChange={handleFileChange} />
+                <input id="profile-picture" type="file" name="profile_picture" className="form-input cursor-pointer" onChange={handleFileChange} />
               </div>
               <button type="submit" disabled={loading} className="btn-primary mt-2">
                 {loading ? 'Saving...' : 'Save profile'}
@@ -157,7 +157,7 @@ export default function Profile() {
           </div>
 
           {/* Password Form */}
-          <div className="bg-white shadow rounded-lg p-6">
+          <div className="card">
             <h3 className="text-lg font-semibold mb-4">Change Password</h3>
             <form onSubmit={handlePassword} className="grid gap-4">
               <div>

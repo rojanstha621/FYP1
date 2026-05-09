@@ -1,6 +1,8 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { Mail, Lock } from 'lucide-react'
 import { useAuth } from '../auth/AuthContext'
+import FormInput from '../components/FormInput'
 import Alert from '../components/Alert'
 import logo from '../assets/logo.png'
 
@@ -24,36 +26,34 @@ export default function Login() {
       <div className="card max-w-md w-full">
         <div className="text-center mb-6">
           <img src={logo} alt="BabyEase logo" className="h-14 w-auto mx-auto mb-3" />
-          <h1 id="login-heading" className="text-2xl font-bold tracking-tight">Welcome Back</h1>
+          <h1 id="login-heading" className="section-title">Welcome Back</h1>
           <p className="text-sm text-gray-500 mt-1">Safe care starts with trusted connections.</p>
         </div>
 
-        {error && <Alert type="error" className="mb-3">{error}</Alert>}
+        {error && <Alert type="error" className="mb-4">{error}</Alert>}
 
         <form onSubmit={handleSubmit} className="space-y-4" aria-labelledby="login-heading">
-          <div>
-            <label htmlFor="login-email" className="form-label">Email</label>
-            <input
-              id="login-email"
-              name="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="form-input"
-              required
-            />
-          </div>
-          <div>
-            <label htmlFor="login-password" className="form-label">Password</label>
-            <input
-              id="login-password"
-              name="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="form-input"
-              required
-            />
-          </div>
+          <FormInput
+            label="Email"
+            name="email"
+            type="email"
+            icon={Mail}
+            placeholder="your@email.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+          <FormInput
+            label="Password"
+            name="password"
+            type="password"
+            icon={Lock}
+            placeholder="Enter your password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            showPasswordToggle
+            required
+          />
           <div>
             <button type="submit" className="btn-primary w-full">Login</button>
           </div>

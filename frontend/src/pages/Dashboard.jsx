@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { Users, UserCheck, Baby, Clock, Calendar, Star, AlertCircle } from 'lucide-react'
 import { useAuth } from '../auth/AuthContext'
 import {
   useChildren,
@@ -121,10 +122,10 @@ export default function Dashboard() {
       {user?.role === 'ADMIN' && (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <StatCard title="Total Users" value={stats?.totalUsers || 0} subtitle={`${stats?.activeUsers || 0} active`} />
-            <StatCard title="Parents" value={stats?.parents || 0} subtitle="Registered parents" />
-            <StatCard title="Babysitters" value={stats?.babysitters || 0} subtitle="Registered babysitters" />
-            <StatCard title="Inactive" value={stats?.inactiveUsers || 0} subtitle="Require follow-up" />
+            <StatCard title="Total Users" value={stats?.totalUsers || 0} subtitle={`${stats?.activeUsers || 0} active`} icon={Users} />
+            <StatCard title="Parents" value={stats?.parents || 0} subtitle="Registered parents" icon={UserCheck} />
+            <StatCard title="Babysitters" value={stats?.babysitters || 0} subtitle="Registered babysitters" icon={Baby} />
+            <StatCard title="Inactive" value={stats?.inactiveUsers || 0} subtitle="Require follow-up" icon={AlertCircle} />
           </div>
 
           <div className="card mb-8">
@@ -206,9 +207,9 @@ export default function Dashboard() {
       {user?.role === 'PARENT' && (
         <>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <StatCard title="Active Bookings" value={upcomingBookings?.length || 0} subtitle="Upcoming care sessions" />
-            <StatCard title="Pending Requests" value={pendingRequestsCount} subtitle="Awaiting babysitter response" />
-            <StatCard title="Children Profiles" value={children?.length || 0} subtitle="Profiles in your account" />
+            <StatCard title="Active Bookings" value={upcomingBookings?.length || 0} subtitle="Upcoming care sessions" icon={Calendar} />
+            <StatCard title="Pending Requests" value={pendingRequestsCount} subtitle="Awaiting babysitter response" icon={Clock} />
+            <StatCard title="Children Profiles" value={children?.length || 0} subtitle="Profiles in your account" icon={Baby} />
           </div>
 
           <div className="card mb-6">
@@ -303,9 +304,9 @@ function BabysitterDashboard() {
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <StatCard title="Pending Requests" value={pendingRequests.length} subtitle="Need your response" />
-        <StatCard title="Completed Jobs" value={(reviews || []).length} subtitle="Reviewed sessions" />
-        <StatCard title="Average Rating" value={avgRating} subtitle="From parent reviews" />
+        <StatCard title="Pending Requests" value={pendingRequests.length} subtitle="Need your response" icon={Clock} />
+        <StatCard title="Completed Jobs" value={(reviews || []).length} subtitle="Reviewed sessions" icon={Calendar} />
+        <StatCard title="Average Rating" value={avgRating} subtitle="From parent reviews" icon={Star} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -340,12 +341,21 @@ function BabysitterDashboard() {
   )
 }
 
-function StatCard({ title, value, subtitle }) {
+function StatCard({ title, value, subtitle, icon: Icon }) {
   return (
     <div className="card">
-      <p className="text-sm text-gray-500">{title}</p>
-      <p className="text-3xl font-bold tracking-tight mt-1">{value}</p>
-      <p className="text-xs text-gray-500 mt-2">{subtitle}</p>
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="text-sm text-gray-500">{title}</p>
+          <p className="text-3xl font-bold tracking-tight mt-1">{value}</p>
+          <p className="text-xs text-gray-500 mt-2">{subtitle}</p>
+        </div>
+        {Icon && (
+          <div className="text-pink-200">
+            <Icon size={32} />
+          </div>
+        )}
+      </div>
     </div>
   )
 }

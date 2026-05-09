@@ -46,8 +46,8 @@ export const AuthProvider = ({ children }) => {
     navigate('/dashboard')
   }
 
-  const register = async (payload) => {
-    await registerApi(payload)
+  const register = async (payload, citizenshipDoc) => {
+    await registerApi(payload, citizenshipDoc)
     navigate('/login')
   }
 
