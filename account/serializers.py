@@ -61,6 +61,7 @@ class UserBasicSerializer(serializers.ModelSerializer):
 
 class UserProfileSerializer(serializers.ModelSerializer):
     profile_picture = serializers.ImageField(required=False, allow_null=True)
+    citizenship_document = serializers.FileField(required=False, allow_null=True)
 
     class Meta:
         model = UserProfile
@@ -68,6 +69,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "profile_picture",
             "address",
             "bio",
+            "citizenship_document",
             "created_at",
             "updated_at",
         ]
@@ -75,11 +77,13 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        profile_picture = data.get("profile_picture")
-        if profile_picture:
-            request = self.context.get("request")
-            if request and not profile_picture.startswith("http"):
-                data["profile_picture"] = request.build_absolute_uri(profile_picture)
+        request = self.context.get("request")
+
+        for field in ["profile_picture", "citizenship_document"]:
+            file_url = data.get(field)
+            if file_url and request and not file_url.startswith("http"):
+                data[field] = request.build_absolute_uri(file_url)
+
         return data
 
 
@@ -133,6 +137,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         write_only=True,
         validators=[validate_password],
     )
+    citizenship_document = serializers.FileField(required=False, allow_null=True)
 
     class Meta:
         model = User
@@ -143,10 +148,12 @@ class RegisterSerializer(serializers.ModelSerializer):
             "phone_number",
             "role",
             "password",
+            "citizenship_document",
         ]
 
     def create(self, validated_data):
         password = validated_data.pop("password")
+        citizenship_document = validated_data.pop("citizenship_document", None)
 
         # Create user
         user = User.objects.create(
@@ -155,20 +162,24 @@ class RegisterSerializer(serializers.ModelSerializer):
             last_name=validated_data.get("last_name"),
             phone_number=validated_data.get("phone_number"),
             role=validated_data["role"],
-            is_active=True,  # later you can set False until email verified
+            is_active=True,
         )
 
         user.set_password(password)
         user.save()
 
-        # Create empty profile automatically
-        UserProfile.objects.create(user=user)
+        # Create profile with optional citizenship document
+        profile = UserProfile.objects.create(user=user)
+        if citizenship_document:
+            profile.citizenship_document = citizenship_document
+            profile.save()
 
         return user
 
 
 class AdminUserProfileSerializer(serializers.ModelSerializer):
     profile_picture = serializers.SerializerMethodField()
+    citizenship_document = serializers.SerializerMethodField()
 
     class Meta:
         model = UserProfile
@@ -176,6 +187,7 @@ class AdminUserProfileSerializer(serializers.ModelSerializer):
             "profile_picture",
             "address",
             "bio",
+            "citizenship_document",
             "created_at",
             "updated_at",
         ]
@@ -186,6 +198,13 @@ class AdminUserProfileSerializer(serializers.ModelSerializer):
             return None
         request = self.context.get("request")
         url = obj.profile_picture.url
+        return request.build_absolute_uri(url) if request else url
+
+    def get_citizenship_document(self, obj):
+        if not obj.citizenship_document:
+            return None
+        request = self.context.get("request")
+        url = obj.citizenship_document.url
         return request.build_absolute_uri(url) if request else url
 
 

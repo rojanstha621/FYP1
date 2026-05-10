@@ -68,8 +68,12 @@ class UserProfile(models.Model):
     # Basic profile fields
     profile_picture = models.ImageField(upload_to="profiles/", blank=True, null=True)
     address = models.CharField(max_length=255, blank=True, null=True)
-
     bio = models.TextField(blank=True, null=True)
+
+    # Babysitter-specific fields
+    citizenship_document = models.FileField(
+        upload_to="documents/", blank=True, null=True
+    )
 
     updated_at = models.DateTimeField(auto_now=True)
     created_at = models.DateTimeField(auto_now_add=True)

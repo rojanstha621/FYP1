@@ -150,6 +150,7 @@ class ChangePasswordView(APIView):
 
 class RegisterView(APIView):
     permission_classes = [AllowAny]
+    parser_classes = [MultiPartParser, FormParser]
 
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
