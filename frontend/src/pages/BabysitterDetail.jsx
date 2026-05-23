@@ -150,12 +150,6 @@ export default function BabysitterDetail() {
         <Link to="/babysitters" className="text-pink-600 hover:text-pink-700 transition-all duration-200">
           ← Back to Babysitters
         </Link>
-        <button 
-          className="btn-primary"
-          onClick={() => setShowRequestForm(!showRequestForm)}
-        >
-          {showRequestForm ? 'Close Form' : 'Book Now'}
-        </button>
       </div>
 
       {message && (

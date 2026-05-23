@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Users, UserCheck, Baby, Clock, Calendar, Star, AlertCircle } from 'lucide-react'
+import { Users, UserCheck, Baby, Clock, Calendar, Star, AlertCircle, Search, BookOpen, History } from 'lucide-react'
 import { useAuth } from '../auth/AuthContext'
 import {
   useChildren,
@@ -114,9 +114,17 @@ export default function Dashboard() {
     <div className="page-wrap max-w-7xl mx-auto px-4">
       {alert && <Alert type={alert.type} message={alert.message} onClose={() => setAlert(null)} />}
 
-      <section className="rounded-2xl border border-pink-100 bg-gradient-to-r from-pink-50 to-pink-100 p-6 mb-6">
-        <h1 className="text-2xl font-bold tracking-tight">Hello {user?.first_name || 'User'} 👋</h1>
-        <p className="text-sm text-gray-600 mt-1">Welcome back to your BabyEase dashboard.</p>
+      <section className="rounded-2xl border border-pink-100 bg-gradient-to-r from-pink-50 via-pink-50 to-pink-100 p-6 mb-6 shadow-sm">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Hello {user?.first_name || 'User'} 👋</h1>
+            <p className="text-sm text-gray-600 mt-1">Welcome back to your BabyEase dashboard.</p>
+          </div>
+          <div className="flex items-center gap-2 rounded-full border border-pink-200 bg-white/70 px-3 py-1 text-xs text-pink-700">
+            <span className="inline-flex h-2 w-2 rounded-full bg-pink-500"></span>
+            Live updates enabled
+          </div>
+        </div>
       </section>
 
       {user?.role === 'ADMIN' && (
@@ -212,29 +220,56 @@ export default function Dashboard() {
             <StatCard title="Children Profiles" value={children?.length || 0} subtitle="Profiles in your account" icon={Baby} />
           </div>
 
-          <div className="card mb-6">
-            <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
+          <div className="card mb-6 bg-gradient-to-br from-white to-pink-50/40">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold">Quick Actions</h2>
+              <span className="text-xs text-gray-500">Shortcuts to keep you moving</span>
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <Link to="/babysitters" className="rounded-2xl border border-pink-100 bg-white p-4 hover:bg-pink-50 transition-all duration-200">
-                <h3 className="font-semibold">Find a Babysitter</h3>
-                <p className="text-sm text-gray-500 mt-1">Browse verified profiles</p>
+              <Link to="/babysitters" className="group rounded-2xl border border-pink-100 bg-white p-4 hover:border-pink-200 hover:bg-pink-50 transition-all duration-200">
+                <div className="flex items-start gap-3">
+                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-pink-100 text-pink-600 group-hover:bg-pink-200 transition-all duration-200">
+                    <Search size={18} />
+                  </span>
+                  <div>
+                    <h3 className="font-semibold">Find a Babysitter</h3>
+                    <p className="text-sm text-gray-500 mt-1">Browse verified profiles</p>
+                  </div>
+                </div>
               </Link>
-              <Link to="/children" className="rounded-2xl border border-pink-100 bg-white p-4 hover:bg-pink-50 transition-all duration-200">
-                <h3 className="font-semibold">My Children</h3>
-                <p className="text-sm text-gray-500 mt-1">Manage child details</p>
+              <Link to="/children" className="group rounded-2xl border border-pink-100 bg-white p-4 hover:border-pink-200 hover:bg-pink-50 transition-all duration-200">
+                <div className="flex items-start gap-3">
+                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-purple-100 text-purple-600 group-hover:bg-purple-200 transition-all duration-200">
+                    <BookOpen size={18} />
+                  </span>
+                  <div>
+                    <h3 className="font-semibold">My Children</h3>
+                    <p className="text-sm text-gray-500 mt-1">Manage child details</p>
+                  </div>
+                </div>
               </Link>
-              <Link to="/history" className="rounded-2xl border border-pink-100 bg-white p-4 hover:bg-pink-50 transition-all duration-200">
-                <h3 className="font-semibold">Booking History</h3>
-                <p className="text-sm text-gray-500 mt-1">See completed requests</p>
+              <Link to="/history" className="group rounded-2xl border border-pink-100 bg-white p-4 hover:border-pink-200 hover:bg-pink-50 transition-all duration-200">
+                <div className="flex items-start gap-3">
+                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 text-amber-600 group-hover:bg-amber-200 transition-all duration-200">
+                    <History size={18} />
+                  </span>
+                  <div>
+                    <h3 className="font-semibold">Booking History</h3>
+                    <p className="text-sm text-gray-500 mt-1">See completed requests</p>
+                  </div>
+                </div>
               </Link>
             </div>
           </div>
 
-          <div className="card">
-            <h2 className="text-lg font-semibold mb-4">Recent Requests</h2>
+          <div className="card bg-gradient-to-br from-white to-pink-50/40">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold">Recent Requests</h2>
+              <span className="text-xs text-gray-500">Latest activity</span>
+            </div>
             <div className="space-y-3">
               {(parentRequests || []).slice(0, 5).map((request) => (
-                <div key={request.id} className="rounded-2xl border border-pink-100 p-4 flex items-center justify-between">
+                <div key={request.id} className="rounded-2xl border border-pink-100 bg-white p-4 flex items-center justify-between">
                   <div>
                     <p className="font-medium">{request.child_name || 'No child assigned'}</p>
                     <p className="text-sm text-gray-500">{new Date(request.start_date).toLocaleString()}</p>
@@ -343,16 +378,16 @@ function BabysitterDashboard() {
 
 function StatCard({ title, value, subtitle, icon: Icon }) {
   return (
-    <div className="card">
+    <div className="card bg-gradient-to-br from-white to-pink-50/40 border border-pink-100 shadow-sm">
       <div className="flex items-start justify-between">
         <div>
           <p className="text-sm text-gray-500">{title}</p>
-          <p className="text-3xl font-bold tracking-tight mt-1">{value}</p>
+          <p className="text-3xl font-bold tracking-tight mt-1 text-[#1A1A2E]">{value}</p>
           <p className="text-xs text-gray-500 mt-2">{subtitle}</p>
         </div>
         {Icon && (
-          <div className="text-pink-200">
-            <Icon size={32} />
+          <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-pink-100 text-pink-600">
+            <Icon size={22} />
           </div>
         )}
       </div>

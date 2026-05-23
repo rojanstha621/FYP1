@@ -55,8 +55,8 @@ export default function NavBar() {
     }`
 
   return (
-    <nav className="bg-white border-b border-pink-100" role="navigation" aria-label="Main navigation">
-      <div className="container-main flex items-center justify-between py-3">
+    <nav className="bg-white/90 backdrop-blur-md border-b border-pink-100" role="navigation" aria-label="Main navigation">
+      <div className="container-main flex items-center justify-between py-4">
         <Link
           to="/"
           className="flex items-center gap-3 focus:outline-none focus:ring-2 focus:ring-pink-400 rounded-xl"
@@ -76,7 +76,7 @@ export default function NavBar() {
           </svg>
         </button>
 
-        <div className="hidden md:flex items-center gap-5">
+        <div className="hidden md:flex flex-1 items-center justify-center gap-6">
           <NavLink to="/dashboard" className={navItemClass}>Dashboard</NavLink>
 
           {links.map((item) => (
@@ -84,48 +84,40 @@ export default function NavBar() {
               {item.label}
             </NavLink>
           ))}
+        </div>
 
+        <div className="hidden md:flex items-center justify-end gap-4 min-w-[160px]">
           {user ? (
-            <div className="flex items-center gap-3">
-              <button type="button" className="relative rounded-full border border-pink-200 p-2 text-pink-600 hover:bg-pink-50 transition-all duration-200" aria-label="Notifications">
-                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2a2 2 0 01-.6 1.4L4 17h5" />
-                  <path d="M9 17a3 3 0 006 0" />
-                </svg>
-                <span className="absolute -top-1 -right-1 h-4 min-w-4 rounded-full bg-[#FF6B9D] text-[10px] text-white leading-4 text-center px-1">1</span>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setOpenProfile((prev) => !prev)}
+                className="h-10 w-10 rounded-full bg-pink-100 text-pink-700 font-semibold border border-pink-200 overflow-hidden ring-2 ring-white"
+              >
+                {profileImage ? (
+                  <img src={profileImage} alt="Profile" className="h-full w-full object-cover" />
+                ) : (
+                  initials
+                )}
               </button>
 
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setOpenProfile((prev) => !prev)}
-                  className="h-10 w-10 rounded-full bg-pink-100 text-pink-700 font-semibold border border-pink-200 overflow-hidden"
-                >
-                  {profileImage ? (
-                    <img src={profileImage} alt="Profile" className="h-full w-full object-cover" />
-                  ) : (
-                    initials
-                  )}
-                </button>
-
-                {openProfile && (
-                  <div className="absolute right-0 mt-2 w-48 rounded-2xl border border-pink-100 bg-white shadow-md p-2 z-50">
-                    <Link
-                      to="/profile"
-                      onClick={() => setOpenProfile(false)}
-                      className="block rounded-xl px-3 py-2 text-sm text-gray-700 hover:bg-pink-50"
-                    >
-                      Profile
-                    </Link>
-                    <button
-                      onClick={logout}
-                      className="w-full text-left rounded-xl px-3 py-2 text-sm text-red-500 hover:bg-pink-50"
-                    >
-                      Logout
-                    </button>
-                  </div>
-                )}
-              </div>
+              {openProfile && (
+                <div className="absolute right-0 mt-2 w-48 rounded-2xl border border-pink-100 bg-white shadow-md p-2 z-50">
+                  <Link
+                    to="/profile"
+                    onClick={() => setOpenProfile(false)}
+                    className="block rounded-xl px-3 py-2 text-sm text-gray-700 hover:bg-pink-50"
+                  >
+                    Profile
+                  </Link>
+                  <button
+                    onClick={logout}
+                    className="w-full text-left rounded-xl px-3 py-2 text-sm text-red-500 hover:bg-pink-50"
+                  >
+                    Logout
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
             <div className="flex items-center gap-2">

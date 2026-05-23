@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { useBabysittersSearch, useChildren, useCreateRequest } from '../api/hooks'
 import Alert from '../components/Alert'
@@ -7,26 +7,50 @@ export default function Babysitters() {
   const [query, setQuery] = useState({ name: '', city: '', min_rating: '' })
   const [message, setMessage] = useState('')
   const [selected, setSelected] = useState(null)
-  const [visibleCount, setVisibleCount] = useState(0)
+  const [animatedCards, setAnimatedCards] = useState(new Set())
+  const cardRefs = useRef({})
+  const hasInitialized = useRef(false)
 
   const { data: results, isLoading } = useBabysittersSearch(query)
   const { data: children } = useChildren()
   const createRequest = useCreateRequest()
 
   useEffect(() => {
-    if (results && results.length > 0) {
-      setVisibleCount(0)
-      let index = 0
-      const interval = setInterval(() => {
-        index++
-        if (index <= results.length) {
-          setVisibleCount(index)
-        } else {
-          clearInterval(interval)
+    if (!results || results.length === 0) return
+
+    // Reset on new results
+    setAnimatedCards(new Set())
+    cardRefs.current = {}
+    hasInitialized.current = false
+
+    // Small delay to ensure DOM refs are populated
+    const initTimer = setTimeout(() => {
+      // Create intersection observer
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              const cardId = entry.target.dataset.id
+              setAnimatedCards((prev) => new Set([...prev, cardId]))
+            }
+          })
+        },
+        {
+          threshold: 0.15,
+          rootMargin: '0px 0px 50px 0px',
         }
-      }, 150)
-      return () => clearInterval(interval)
-    }
+      )
+
+      // Get all card elements and observe them
+      const cardElements = document.querySelectorAll('[data-id]')
+      cardElements.forEach((element) => {
+        observer.observe(element)
+      })
+
+      return () => observer.disconnect()
+    }, 100) // Back to normal 100ms for DOM readiness
+
+    return () => clearTimeout(initTimer)
   }, [results])
 
   const submitRequest = async (e) => {
@@ -84,23 +108,91 @@ export default function Babysitters() {
       {isLoading && <div className="text-center text-gray-500">Searching...</div>}
 
       <style>{`
-        @keyframes slideInUp {
-          from {
+        @keyframes scrollRevealUp {
+          0% {
             opacity: 0;
-            transform: translateY(20px);
+            transform: translateY(28px) scale(0.98);
+            filter: blur(6px);
           }
-          to {
+          60% {
+            opacity: 0.55;
+            transform: translateY(8px) scale(0.995);
+            filter: blur(3px);
+          }
+          100% {
             opacity: 1;
-            transform: translateY(0);
+            transform: translateY(0) scale(1);
+            filter: blur(0);
           }
         }
+
+        @keyframes shimmer {
+          0% {
+            background-position: -1000px 0;
+          }
+          100% {
+            background-position: 1000px 0;
+          }
+        }
+        
         .babysitter-card {
-          animation: slideInUp 0.4s ease-out forwards;
+          opacity: 0;
+          visibility: hidden;
+          transform: translateY(28px) scale(0.98);
+          filter: blur(6px);
+        }
+
+        .babysitter-card.reveal {
+          visibility: visible;
+          animation: scrollRevealUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+
+        .skeleton-card {
+          background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+          background-size: 1000px 100%;
+          animation: shimmer 2s infinite;
+        }
+
+        .skeleton-circle {
+          width: 96px;
+          height: 96px;
+          border-radius: 50%;
+          background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+          background-size: 1000px 100%;
+          animation: shimmer 2s infinite;
+        }
+
+        .skeleton-text {
+          background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+          background-size: 1000px 100%;
+          animation: shimmer 2s infinite;
+          border-radius: 4px;
         }
       `}</style>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-        {results?.length === 0 && (
+      <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {isLoading && !results && (
+          <>
+            {[...Array(6)].map((_, index) => (
+              <div key={`skeleton-${index}`} className="skeleton-card card p-6">
+                <div className="flex flex-col items-center text-center">
+                  <div className="skeleton-circle mb-4"></div>
+                  <div className="skeleton-text h-6 w-24 mb-2"></div>
+                  <div className="skeleton-text h-4 w-32 mb-3"></div>
+                  <div className="skeleton-text h-4 w-20 mb-4"></div>
+                  <div className="skeleton-text h-4 w-28 mb-3"></div>
+                  <div className="skeleton-text h-5 w-24 mb-4 rounded-full"></div>
+                  <div className="flex gap-2 w-full mt-4">
+                    <div className="skeleton-text h-10 flex-1"></div>
+                    <div className="skeleton-text h-10 flex-1"></div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </>
+        )}
+
+        {!isLoading && results?.length === 0 && (
           <div className="col-span-full card text-center">
             <div className="text-5xl mb-3">🧸</div>
             <h3 className="text-lg font-semibold mb-1">No babysitters found</h3>
@@ -108,12 +200,27 @@ export default function Babysitters() {
           </div>
         )}
 
-        {results?.slice(0, visibleCount).map((babysitter, index) => (
+        {!isLoading && results?.map((babysitter, index) => (
           <div
             key={babysitter.id}
-            className="babysitter-card card hover:shadow-md transition-all duration-200"
+            ref={(el) => {
+              if (el) cardRefs.current[babysitter.id] = el
+            }}
+            data-id={babysitter.id}
+            data-index={index}
+            className={`babysitter-card card hover:shadow-md transition-all duration-200 ${
+              animatedCards.has(babysitter.id) ? 'reveal' : ''
+            }`}
             style={{
-              animationDelay: `${index * 0.15}s`,
+              animationDelay: animatedCards.has(babysitter.id)
+                ? (() => {
+                    const row = Math.floor(index / 3)
+                    const position = index % 3
+                    const baseDelay = row * 0.45
+                    const positionDelay = position === 0 ? 0 : position === 1 ? 0.3 : 0.45
+                    return `${baseDelay + positionDelay}s`
+                  })()
+                : '0s',
             }}
           >
             <div className="flex flex-col items-center text-center">
