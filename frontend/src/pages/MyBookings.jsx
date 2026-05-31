@@ -166,11 +166,11 @@ function BookingCard({ booking, onComplete, status, showCompleteButton }) {
         </div>
         <div>
           <span className="font-medium text-gray-700">Rate:</span>
-          <span className="ml-2 text-gray-600">${booking.hourly_rate}/hr</span>
+          <span className="ml-2 text-gray-600">rs{booking.hourly_rate}/hr</span>
         </div>
         <div>
           <span className="font-medium text-gray-700">Total:</span>
-          <span className="ml-2 text-gray-600 font-semibold">${booking.total_cost || 'TBD'}</span>
+          <span className="ml-2 text-gray-600 font-semibold">rs{booking.total_cost || 'TBD'}</span>
         </div>
       </div>
 

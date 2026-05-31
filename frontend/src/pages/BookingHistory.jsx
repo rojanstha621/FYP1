@@ -59,10 +59,10 @@ export default function BookingHistory() {
                       <span className="font-medium">Duration:</span> {booking.duration_hours} hours
                     </span>
                     <span>
-                      <span className="font-medium">Rate:</span> ${parseFloat(booking.hourly_rate).toFixed(2)}/hr
+                      <span className="font-medium">Rate:</span> rs{parseFloat(booking.hourly_rate).toFixed(2)}/hr
                     </span>
                     <span>
-                      <span className="font-medium">Total:</span> ${parseFloat(booking.total_cost).toFixed(2)}
+                      <span className="font-medium">Total:</span> rs{parseFloat(booking.total_cost).toFixed(2)}
                     </span>
                   </div>
                 </div>

@@ -104,7 +104,7 @@ export default function Requests() {
                 </div>
                 {r.total_cost && (
                   <div className="text-sm font-medium mt-1">
-                    Total: ${parseFloat(r.total_cost).toFixed(2)}
+                    Total: rs{parseFloat(r.total_cost).toFixed(2)}
                   </div>
                 )}
               </div>

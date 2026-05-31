@@ -250,10 +250,10 @@ export default function RequestDetail() {
             <div>
               <label className="text-sm font-medium text-textSecondary">Cost</label>
               <div className="mt-1 text-base">
-                <div><span className="font-medium">Hourly Rate:</span> ${parseFloat(request.hourly_rate).toFixed(2)}/hour</div>
+                <div><span className="font-medium">Hourly Rate:</span> rs{parseFloat(request.hourly_rate).toFixed(2)}/hour</div>
                 {request.total_cost && (
                   <div className="text-lg font-semibold text-pink-600 mt-1">
-                    Total: ${parseFloat(request.total_cost).toFixed(2)}
+                    Total: rs{parseFloat(request.total_cost).toFixed(2)}
                   </div>
                 )}
               </div>

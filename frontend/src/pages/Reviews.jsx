@@ -104,14 +104,13 @@ function CreateReviewForm({ unreviewedBookings, onClose }) {
     try {
       await createReview.mutateAsync({
         booking: selectedBooking,
-        babysitter: booking.babysitter_info.id,
         rating,
         comment,
       })
       setMessage('Review submitted successfully')
       setTimeout(() => onClose(), 1200)
-    } catch {
-      setMessage('Failed to submit review')
+    } catch (error) {
+      setMessage(error?.response?.data?.booking?.[0] || error?.response?.data?.detail || 'Failed to submit review')
     }
   }
 

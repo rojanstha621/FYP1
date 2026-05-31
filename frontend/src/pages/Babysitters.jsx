@@ -250,7 +250,7 @@ export default function Babysitters() {
               <p className="text-sm text-gray-500 mt-2">📍 {babysitter.profile?.address || 'Location unavailable'}</p>
 
               <span className="mt-3 inline-flex rounded-full bg-pink-100 text-pink-700 px-3 py-1 text-xs font-semibold">
-                ${Number.parseFloat(babysitter.hourly_rate || 15).toFixed(2)}/hr
+                rs{Number.parseFloat(babysitter.hourly_rate || 15).toFixed(2)}/hr
               </span>
 
               {babysitter.profile?.bio && (

@@ -1,5 +1,6 @@
 from rest_framework import viewsets, status, filters
 from rest_framework.decorators import action
+from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
@@ -306,12 +307,13 @@ class BabysitterReviewViewSet(viewsets.ModelViewSet):
         """Create review for current parent"""
         try:
             parent_profile = self.request.user.parent_profile
-            serializer.save(parent=parent_profile)
-        except ParentProfile.DoesNotExist:
-            return Response(
-                {"detail": "Parent profile not found."},
-                status=status.HTTP_404_NOT_FOUND,
+            booking = serializer.validated_data["booking"]
+            serializer.save(
+                parent=parent_profile,
+                babysitter=booking.babysitter,
             )
+        except ParentProfile.DoesNotExist:
+            raise NotFound("Parent profile not found.")
 
 
 class BookingHistoryViewSet(viewsets.ReadOnlyModelViewSet):

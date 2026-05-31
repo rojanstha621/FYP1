@@ -184,7 +184,7 @@ export default function BabysitterDetail() {
                 <span className="text-xs text-gray-500">({babysitter.total_reviews || 0} reviews)</span>
               </div>
               <span className="inline-flex rounded-full bg-pink-100 text-pink-700 px-3 py-1 text-xs font-semibold">
-                ${Number.parseFloat(babysitter.hourly_rate || 15).toFixed(2)}/hr
+                rs{Number.parseFloat(babysitter.hourly_rate || 15).toFixed(2)}/hr
               </span>
             </div>
           </div>

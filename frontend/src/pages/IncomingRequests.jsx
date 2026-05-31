@@ -98,11 +98,11 @@ export default function IncomingRequests() {
                 </div>
                 <div>
                   <span className="font-medium text-gray-700">Hourly Rate:</span>
-                  <span className="ml-2 text-gray-600">${request.hourly_rate}/hr</span>
+                  <span className="ml-2 text-gray-600">rs{request.hourly_rate}/hr</span>
                 </div>
                 <div>
                   <span className="font-medium text-gray-700">Total Cost:</span>
-                  <span className="ml-2 text-gray-600">${request.total_cost || 'TBD'}</span>
+                  <span className="ml-2 text-gray-600">rs{request.total_cost || 'TBD'}</span>
                 </div>
               </div>
 

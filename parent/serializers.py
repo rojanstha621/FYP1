@@ -409,6 +409,10 @@ class BabysitterRequestDetailSerializer(serializers.ModelSerializer):
 class BabysitterReviewSerializer(serializers.ModelSerializer):
     """Serializer for babysitter reviews"""
 
+    booking = serializers.PrimaryKeyRelatedField(
+        queryset=BabysitterRequest.objects.all(),
+        write_only=True,
+    )
     parent_info = UserSerializer(source="parent.user", read_only=True)
     babysitter_info = UserSerializer(source="babysitter", read_only=True)
     booking_id = serializers.CharField(source="booking.id", read_only=True)
@@ -417,6 +421,7 @@ class BabysitterReviewSerializer(serializers.ModelSerializer):
         model = BabysitterReview
         fields = [
             "id",
+            "booking",
             "booking_id",
             "parent_info",
             "babysitter_info",
@@ -433,6 +438,43 @@ class BabysitterReviewSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
+
+    def validate(self, attrs):
+        """Ensure the review belongs to the current parent and a valid completed booking."""
+        request = self.context["request"]
+        booking = attrs.get("booking")
+
+        if self.instance is not None:
+            return attrs
+
+        try:
+            parent_profile = request.user.parent_profile
+        except ParentProfile.DoesNotExist as exc:
+            raise serializers.ValidationError(
+                {"detail": "Parent profile not found."}
+            ) from exc
+
+        if booking.parent_id != parent_profile.id:
+            raise serializers.ValidationError(
+                {"booking": "You can only review your own bookings."}
+            )
+
+        if booking.status != "COMPLETED":
+            raise serializers.ValidationError(
+                {"booking": "You can only review completed bookings."}
+            )
+
+        if not booking.babysitter_id:
+            raise serializers.ValidationError(
+                {"booking": "This booking does not have an assigned babysitter."}
+            )
+
+        if BabysitterReview.objects.filter(booking=booking).exists():
+            raise serializers.ValidationError(
+                {"booking": "A review already exists for this booking."}
+            )
+
+        return attrs
 
 
 class BookingHistorySerializer(serializers.ModelSerializer):

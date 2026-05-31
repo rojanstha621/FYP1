@@ -17,7 +17,7 @@ export default function BabysitterBookingHistory() {
       {history && history.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <div className="card text-center">
-            <div className="text-3xl font-bold text-pink-600">${totalEarnings.toFixed(2)}</div>
+            <div className="text-3xl font-bold text-pink-600">rs{totalEarnings.toFixed(2)}</div>
             <div className="text-sm text-gray-600 mt-1">Total Earnings</div>
           </div>
           <div className="card text-center">
@@ -64,8 +64,8 @@ export default function BabysitterBookingHistory() {
                     <div className="text-xs text-gray-500">{formatTime(booking.start_date)}</div>
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-900">{booking.duration_hours} hrs</td>
-                  <td className="px-4 py-3 text-sm text-gray-900">${booking.hourly_rate}/hr</td>
-                  <td className="px-4 py-3 text-sm font-semibold text-pink-600">${booking.total_cost}</td>
+                  <td className="px-4 py-3 text-sm text-gray-900">rs{booking.hourly_rate}/hr</td>
+                  <td className="px-4 py-3 text-sm font-semibold text-pink-600">rs{booking.total_cost}</td>
                 </tr>
               ))}
             </tbody>
