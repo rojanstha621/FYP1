@@ -5,6 +5,7 @@ import Alert from '../components/Alert'
 import { validateBookingAvailability } from '../utils/availability'
 
 const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+const formatRate = (rate) => `Rs ${Number.parseFloat(rate ?? 0).toFixed(2)}/hr`
 
 export default function BabysitterDetail() {
   const { id } = useParams()
@@ -47,7 +48,7 @@ export default function BabysitterDetail() {
     
     const startDate = new Date(data.get('start_date'))
     const endDate = new Date(data.get('end_date'))
-    const hourlyRate = parseFloat(data.get('hourly_rate')) || 15.00
+    const hourlyRate = parseFloat(data.get('hourly_rate')) || parseFloat(babysitter?.hourly_rate) || 0
 
     // Basic validation
     if (startDate <= new Date()) {
@@ -184,7 +185,7 @@ export default function BabysitterDetail() {
                 <span className="text-xs text-gray-500">({babysitter.total_reviews || 0} reviews)</span>
               </div>
               <span className="inline-flex rounded-full bg-pink-100 text-pink-700 px-3 py-1 text-xs font-semibold">
-                rs{Number.parseFloat(babysitter.hourly_rate || 15).toFixed(2)}/hr
+                {formatRate(babysitter.hourly_rate)}
               </span>
             </div>
           </div>
@@ -252,7 +253,8 @@ export default function BabysitterDetail() {
                 type="number" 
                 step="0.01" 
                 className="form-input" 
-                placeholder="15.00"
+                placeholder={babysitter?.hourly_rate ? String(babysitter.hourly_rate) : '0.00'}
+                defaultValue={babysitter?.hourly_rate ?? ''}
               />
             </div>
             <div>

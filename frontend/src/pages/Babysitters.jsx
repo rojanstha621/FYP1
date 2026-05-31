@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom'
 import { useBabysittersSearch, useChildren, useCreateRequest } from '../api/hooks'
 import Alert from '../components/Alert'
 
+const formatRate = (rate) => `Rs ${Number.parseFloat(rate ?? 0).toFixed(2)}/hr`
+
 export default function Babysitters() {
   const [query, setQuery] = useState({ name: '', city: '', min_rating: '' })
   const [message, setMessage] = useState('')
@@ -58,7 +60,7 @@ export default function Babysitters() {
     setMessage('')
     const form = new FormData(e.target)
 
-    const hourlyRate = parseFloat(form.get('hourly_rate')) || 15.00
+    const hourlyRate = parseFloat(form.get('hourly_rate')) || parseFloat(selected?.hourly_rate) || 0
 
     try {
       await createRequest.mutateAsync({
@@ -250,7 +252,7 @@ export default function Babysitters() {
               <p className="text-sm text-gray-500 mt-2">📍 {babysitter.profile?.address || 'Location unavailable'}</p>
 
               <span className="mt-3 inline-flex rounded-full bg-pink-100 text-pink-700 px-3 py-1 text-xs font-semibold">
-                rs{Number.parseFloat(babysitter.hourly_rate || 15).toFixed(2)}/hr
+                {formatRate(babysitter.hourly_rate)}
               </span>
 
               {babysitter.profile?.bio && (
@@ -300,8 +302,8 @@ export default function Babysitters() {
                   type="number"
                   step="0.01"
                   className="form-input"
-                  placeholder="15.00"
-                  defaultValue="15.00"
+                  placeholder={selected?.hourly_rate ? String(selected.hourly_rate) : '0.00'}
+                  defaultValue={selected?.hourly_rate ?? ''}
                 />
               </div>
               <div className="flex justify-end gap-2">
